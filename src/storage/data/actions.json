@@ -1,0 +1,38 @@
+[
+    {
+        "action":"create other users",
+        "tag_line":"can_create_users"
+    },
+    {
+        "action":"delete other users",
+        "tag_line":"can_delete_users"
+    },
+    {
+        "action":"register a warehouse",
+        "tag_line":"can_register_warehouse"
+    },
+    {
+        "action":"deregister a warehouse",
+        "tag_line":"can_deregister_warehouse"
+    },
+    {
+        "action":"stock the warehouse",
+        "tag_line":"can_stock_warehouse"
+    },
+    {
+        "action":"destock the warehouse",
+        "tag_line":"can_destock_warehouse"
+    },
+    {
+        "action":"manage stores or warehouse",
+        "tag_line":"can_manage_warehouses"
+    },
+    {
+        "action":"no action assigned",
+        "tag_line":"no_action_assigned"
+    },
+    {
+        "action":"can view warehouses",
+        "tag_line":"can_view_warehouses"
+    }
+]

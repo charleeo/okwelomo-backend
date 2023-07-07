@@ -1,0 +1,138 @@
+import { BadRequestException, DefaultValuePipe, Injectable, ParseIntPipe, Query, Req } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import * as dotenv from 'dotenv';
+import {
+  paginate,
+  Pagination,
+  IPaginationOptions,
+} from 'nestjs-typeorm-paginate';
+
+import { CreateUserDto } from './dto/create-user.dto'
+import { UpdateUserDto } from './dto/update-user.dto';
+import { User } from './entities/user.entity';
+import { UserRepository } from './user.repository';
+
+import { responseStructure } from 'src/common/helpers/response.structure';
+import { logData, logErrors } from 'src/common/helpers/logging';
+import { Request } from 'express'
+import { IsNumber } from 'class-validator';
+import { UserRoleRepository } from '../config/repository/user_roles.repository';
+import { UserRole } from '../config/entities/user.role.entity';
+import { instanceToPlain } from 'class-transformer';
+import { ActionRepository } from '../config/repository/actions.repository';
+dotenv.config()
+@Injectable()
+export class UserService {
+  constructor(private usersRepository: UserRepository,private userRoelRepo:UserRoleRepository,private actionRepo:ActionRepository){}
+
+  async create(user: CreateUserDto):Promise<User> {
+    return await this.usersRepository.save(user)
+  }
+
+  findAll(): Promise<User[]> {
+    return this.usersRepository.find()
+  }
+
+  findOne(id: number): Promise<User | null> {
+    return this.usersRepository.findOneBy({ id });
+  }
+  findOneByEmail(email: string): Promise<User | null> {
+    return this.usersRepository.findOneBy({ email });
+  }
+
+  // async findOneWithRoles(email: string): Promise<any> {
+    
+  //   // const user = await this.usersRepository.createQueryBuilder("user")
+  //   // .leftJoinAndSelect("user.role", "role")
+  //   // .where("user.email = :email", { email })
+  //   // .getRawOne()
+  //   // const actions = await this.userRoelRepo.createQueryBuilder('userRole')
+  //   // .leftJoinAndSelect("roles","roles.id",'userRole.role_id').getOne()
+
+  //   // let roles = instanceToPlain (await this.userRoelRepo.findOneBy({user:user.id}))
+  //   // user.roles = instanceToPlain (roles)
+   
+  // }
+  // async findOneWithRoles(email: string): Promise<User[]> {
+  //   let qb = await this.usersRepository.createQueryBuilder('u')
+  //   .leftJoinAndSelect("u.userRole",'userRole').getMany()
+  //   console.log(qb)
+  //   return qb
+  // }
+  async findOneWithRoles(email: string): Promise<any> {
+    const user =await this.usersRepository.findOne({
+      relations: {
+          role: true,
+      },
+      where: {
+          email: email,
+      },
+
+    })
+   
+    const plainUser:any = instanceToPlain(user)
+    const role:UserRole = plainUser.role
+    let roleAction=[]
+    if(role){
+      roleAction = role.actions.split(",")
+    }
+
+    return this.getActions(roleAction)
+  }
+
+  async remove(id: number): Promise<void> {
+    await this.usersRepository.delete(id)
+  }
+
+ async update(id: number, updateUserDto: UpdateUserDto) {
+    return await this.usersRepository.update(id,updateUserDto)
+  }
+
+  async paginate(@Query() query:any, @Req() req: Request): Promise<Pagination<User>> {
+    //  let error:any=null
+     let status:boolean=false
+     let message:string =""
+     let data : any=null
+     let error= new BadRequestException("There was an error")
+      try{
+      
+        const page = query.page && IsNumber(query.page) ?query.page:1
+        const limit = (query.limit && IsNumber(query.limit)) ?query.limit:20
+       
+         const qb = this.usersRepository.createQueryBuilder('u');
+       
+        qb.orderBy('u.id', 'DESC')
+        
+        data = await paginate<User>(qb, {
+          page,
+          limit,
+          route: process.env.APP_URL+"user",
+        })
+        if(data['items'].length >0){
+          message="Data found"
+          status=true
+        }
+        
+        logData(data,req,message,200,status)
+      }catch(e){
+        error=e.message
+        logErrors(e.message);
+      }
+      return responseStructure(status,error??message,data)
+  }
+
+  async getActions(actionIds) {
+    return await  this.actionRepo
+     .createQueryBuilder("action")
+    .whereInIds(actionIds)
+    .getMany()
+    // return await this.actionRepo.createQueryBuilder('action')
+    // .where('action.id IN (:...ids)', {
+    //   ids: actionIds,
+    // })
+    // .getMany();
+  }
+}
+
+
