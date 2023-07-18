@@ -39,15 +39,15 @@ export class UserRoleDto {
 
     @IsNotEmpty()
     @IsNumber()
-    public user_id:number
+    public userId:number
     
     @IsNotEmpty()
     @IsNumber()
-    public role_id:number
+    public roleId:number
     
     @IsNotEmpty()
     @IsNumber()
-    public duty_id:number
+    public dutyId:number
 
     @IsNotEmpty()
     @IsArray()
@@ -79,4 +79,14 @@ export class WarehouseCategoryDto {
     @IsNotEmpty()
     @IsString({always:true})
     public categoryTag:string
+}
+export class MeasurementDto {
+ 
+    @IsOptional()
+    @IsNumber()
+    public id:number
+
+    @IsNotEmpty()
+    @IsString({always:true})
+    public name:string
 }

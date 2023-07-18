@@ -1,5 +1,9 @@
 import {DataSourceOptions,DataSource} from "typeorm"
 import * as dotenv from 'dotenv'
+import { WarehouseSubscriber } from "src/modules/warehouse/subscribers/warehouse.subscribers"
+
+
+
 dotenv.config()
 const port = process.env.DB_PORT
 export const datasourceOption: DataSourceOptions={
@@ -12,7 +16,8 @@ export const datasourceOption: DataSourceOptions={
     entities:["dist/**/*.entity.js"],
     migrations : ['dist/db/migrations/*.js'],
     logging:false,
-    migrationsRun:false
+    migrationsRun:false,
+    subscribers:[]
 }
 
 const datasource = new DataSource(datasourceOption)

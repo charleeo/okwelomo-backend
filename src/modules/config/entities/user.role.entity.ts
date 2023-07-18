@@ -1,21 +1,25 @@
 import { Status } from "src/modules/entities/common.type";
-import { User } from "src/modules/user/entities/user.entity";
-import { PrimaryGeneratedColumn, Column, Entity, CreateDateColumn, UpdateDateColumn,OneToOne,JoinColumn} from "typeorm";
+import { Users } from "src/modules/user/entities/user.entity";
+import { PrimaryGeneratedColumn, Column, Entity, CreateDateColumn, UpdateDateColumn,OneToOne,JoinColumn, Generated} from "typeorm";
 
 @Entity()
-export class UserRole
+export class UserRoles
 {
     @PrimaryGeneratedColumn({type:"int",unsigned:true})
     id:number
 
+    @Column()
+    @Generated("uuid")
+    uuid: string
+
     @Column({type:"int",unsigned:true})
-    role_id:number
+    roleId:number
     
     @Column({type:"json"})
     actions:string
 
     @Column({type:"int",unsigned:true})
-    duty_id:number
+    dutyId:number
 
     @Column({
         type: "enum",
@@ -25,13 +29,14 @@ export class UserRole
     })
     status: Status
 
+    @OneToOne(() => Users, user=>user.role)
+    @JoinColumn()
+    user:number
+
     @CreateDateColumn()
     created_at:Date
 
     @UpdateDateColumn()
     updated_at:Date
 
-    @OneToOne(() => User, user=>user.role)
-    @JoinColumn({name:"user_id"})
-    user_id:User
 }

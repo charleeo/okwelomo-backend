@@ -1,14 +1,19 @@
 import fs from "fs"
+import path from "path"
 
 
 export async function logData(req,res){
-    let  logPath = 'logs'
+    let  logPath = 'logs'    
+    fs.access(logPath, err => {
+      err? fs.promises.mkdir(logPath):""
+    })
+
     let  extension = '.txt'
     let file =  "log-"+ getDate()
     const fullPath = `${logPath}/${file}${extension}`    
     let exist= await checkIfFileExists(fullPath)
     let requestBody = JSON.stringify(req.body)
-    let requestHeaders = JSON.stringify(req.headers)
+    let requestHeaders = "XXXXXXXXXXXXxxxxxxxxxxxx"
     let route = `${req.protocol}://${req.get('host')}${req.originalUrl}`
     let responseBody = JSON.stringify(res.locals)
     const method = req.method

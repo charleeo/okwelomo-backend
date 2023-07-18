@@ -1,10 +1,10 @@
 
 import { IsNotEmpty, Length, IsEmail, IsNumber, IsOptional, MinLength, Validate} from 'class-validator';
 import { UniqueFieldValidator } from 'src/config/pipes/unique.validator';
-import { Location } from 'src/modules/config/entities/location.entity';
+import { Locations } from 'src/modules/config/entities/location.entity';
 import { WarehouseStatus } from 'src/modules/entities/common.type';
-import { Warehouse } from '../entities/warehouse.entity';
-import { WarehouseCategory } from 'src/modules/config/entities/warehouse.category.entity';
+import { Warehouses } from '../entities/warehouse.entity';
+import { WarehouseCategories } from 'src/modules/config/entities/warehouse.category.entity';
 import { ColumnExistValidator } from 'src/config/pipes/column.exists.validator';
 
 
@@ -16,7 +16,7 @@ export class WarehouseDto {
     
     @IsNotEmpty()
     @Length(2,225)
-    @Validate(UniqueFieldValidator, [Warehouse, 'warehousename'])
+    @Validate(UniqueFieldValidator, [Warehouses, 'warehousename'])
     public warehouseName:string
     
     @IsNotEmpty()
@@ -40,11 +40,11 @@ export class WarehouseDto {
 
     @IsNotEmpty()
     @IsNumber()
-    location:Location
+    location:Locations
 
-    @IsNotEmpty()
+    @IsOptional()
     @IsNumber()
-    @Validate(ColumnExistValidator,[WarehouseCategory, 'categoryId'])
-    categoryId:WarehouseCategory
+    @Validate(ColumnExistValidator,[WarehouseCategories, 'id'])
+    category:WarehouseCategories
     
 }

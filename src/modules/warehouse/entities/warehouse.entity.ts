@@ -1,7 +1,7 @@
 
-import { Location } from "src/modules/config/entities/location.entity"
-import { WarehouseCategory } from "src/modules/config/entities/warehouse.category.entity"
-import { Status, WarehouseStatus } from "src/modules/entities/common.type"
+import { Locations } from "src/modules/config/entities/location.entity"
+import { WarehouseCategories } from "src/modules/config/entities/warehouse.category.entity"
+import { WarehouseStatus } from "src/modules/entities/common.type"
 import { Exclude } from 'class-transformer';
 import { 
     Entity ,
@@ -10,15 +10,25 @@ import {
     CreateDateColumn,
     UpdateDateColumn,
     ManyToOne,
-    ManyToMany,
     OneToMany,
+    Generated,
+    JoinColumn,
 } from "typeorm"
-import { User } from "src/modules/user/entities/user.entity";
 
-@Entity({name:"warehouses"})
-export class Warehouse{
+import { UsersWarehouses } from "./users.warehouses.entity";
+import { Inventory } from "src/modules/inventory/entities/inventory.entity";
+
+@Entity()
+export class Warehouses{
+    // constructor(private readonly userEvent:UserCreatedEvent ) {
+    //   }
+    
     @PrimaryGeneratedColumn({type:"int",unsigned:true})
     id:number
+
+    @Column()
+    @Generated("uuid")
+    uuid: string
 
     @Column({type:"varchar",length:225})
     warehouseName:string
@@ -47,17 +57,19 @@ export class Warehouse{
     @Column({type:"text",nullable:true})
     contactAddress:string
     
-    @ManyToOne(() => Location, (location) => location.warehouses)
-    location: Location
+    @ManyToOne(() => Locations, (location) => location.warehouses)
+    @JoinColumn()
+    location: Locations
+    
+    @ManyToOne(() => WarehouseCategories, (category) => category.warehouses)
+    @JoinColumn()
+    category: WarehouseCategories
 
-    @OneToMany(() => User, (users) => users.warehouse)
-    users: User[]
+    @OneToMany(() => UsersWarehouses, (userWarehouse) => userWarehouse.warehouse)
+    userWarehouses: UsersWarehouses[]
 
-
-    @ManyToOne(() => WarehouseCategory, (category) => category.warehouses)
-    category: WarehouseCategory
-
-  
+    @OneToMany(() => Inventory, (inventory) => inventory.measurement)
+    inventory: Inventory
 
     @CreateDateColumn()
     createdAt:Date

@@ -2,7 +2,7 @@
 import { Exclude } from "class-transformer"
 
 import { Gender } from "src/modules/entities/common.type"
-import { Role } from "../../config/entities/roles.entity"
+import { Roles } from "../../config/entities/roles.entity"
 import { 
     Entity ,
     PrimaryGeneratedColumn,
@@ -14,18 +14,24 @@ import {
     JoinColumn,
     JoinTable,
     ManyToMany,
-    ManyToOne
+    ManyToOne,
+    Generated
 } from "typeorm"
-import { UserRole } from "src/modules/config/entities/user.role.entity"
-import { Warehouse } from "src/modules/warehouse/entities/warehouse.entity"
+import { UserRoles } from "src/modules/config/entities/user.role.entity"
+import { Warehouses } from "src/modules/warehouse/entities/warehouse.entity"
+import { UsersWarehouses } from "src/modules/warehouse/entities/users.warehouses.entity"
 
 
 
-@Entity({name:"users"})
-export class User {
+@Entity()
+export class Users {
 
     @PrimaryGeneratedColumn({unsigned:true})
     id : number
+
+    @Column()
+    @Generated("uuid")
+    uuid: string
 
     @Column({unique:true,type:"varchar"})
     email:string
@@ -51,10 +57,11 @@ export class User {
     bio:string
 
     
-    @OneToOne(() => UserRole, role => role.user_id)
-    role: UserRole;
-    @ManyToOne(() => Warehouse, (warehouse) => warehouse.users,{nullable:true})
-    warehouse: Warehouse
+    @OneToOne(() => UserRoles, role => role.user)
+    role: UserRoles
+   
+    @OneToMany(() => UsersWarehouses, (userWarehouse) => userWarehouse.user)
+    userWarehouses: UsersWarehouses[]
 
     @CreateDateColumn()
     created_at:Date

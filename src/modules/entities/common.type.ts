@@ -11,3 +11,9 @@ export enum WarehouseStatus {
     active = "active",
     inactive="inactive"
 } 
+
+export enum InventoryStatus {
+    sold = "sold",
+    partialy_sold="partialy_sold",
+    not_sold="not_sold"
+} 

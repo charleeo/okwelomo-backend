@@ -8,6 +8,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './jwt.strategy';
 import { UserModule } from '../user/user.module';
 import { AuthMiddleware } from 'src/middleware/auth/auth.middleware';
+import { ConfigModule } from '../config/config.module';
 
 
 @Module({
@@ -18,6 +19,7 @@ import { AuthMiddleware } from 'src/middleware/auth/auth.middleware';
         secret: process.env.JWTKEY,
         signOptions: { expiresIn: process.env.TOKEN_EXPIRATION },
     }),
+    ConfigModule//for used in the auth service
   ],
   providers: [
     AuthService,

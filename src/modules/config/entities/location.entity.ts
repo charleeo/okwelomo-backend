@@ -1,18 +1,22 @@
 
-import { Warehouse } from "src/modules/warehouse/entities/warehouse.entity";
-import { PrimaryGeneratedColumn, Column, Entity, CreateDateColumn, UpdateDateColumn,OneToOne,JoinColumn, OneToMany} from "typeorm";
+import { Warehouses } from "src/modules/warehouse/entities/warehouse.entity";
+import { PrimaryGeneratedColumn, Column, Entity, CreateDateColumn, UpdateDateColumn,OneToOne,JoinColumn, OneToMany, Generated} from "typeorm";
 
 @Entity()
-export class Location
+export class Locations
 {
     @PrimaryGeneratedColumn({type:"int",unsigned:true})
     id:number
 
-    @Column({type:"varchar",length:225})
+    @Column()
+    @Generated("uuid")
+    uuid: string
+
+    @Column({type:"varchar",length:225,unique:true})
     locationName:string
     
-    @OneToMany(() => Warehouse, (warehouse) => warehouse.location)
-    warehouses: Warehouse[]
+    @OneToMany(() => Warehouses, (warehouse) => warehouse.location)
+    warehouses: Warehouses[]
 
     @CreateDateColumn()
     createdAt:Date

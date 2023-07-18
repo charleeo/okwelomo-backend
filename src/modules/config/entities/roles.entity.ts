@@ -4,19 +4,30 @@ import {
     PrimaryGeneratedColumn,
     Column,
     CreateDateColumn,
-    UpdateDateColumn
+    UpdateDateColumn,
+    Generated
 } from "typeorm"
 
 
 @Entity()
 
-export class Role{
+export class Roles{
     @PrimaryGeneratedColumn()
     id:number
 
+    @Column()
+    @Generated("uuid")
+    uuid: string
+    
     @Column({type:"varchar",length:225})
     role_name:string
 
-    @Column({type:"varchar",length:225,nullable:true})
+    @Column({type:"varchar",length:225,unique:true})
     role:string
+
+    @CreateDateColumn()
+    createdAt:Date
+
+    @UpdateDateColumn()
+    updatedAt:Date
 }

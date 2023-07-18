@@ -1,4 +1,4 @@
-import { Controller,Get,UseGuards,Req,Res,Body,Post, Request as NestRequest} from '@nestjs/common';
+import { Controller,Get,UseGuards,Query,Body,Post, Request as NestRequest, Param} from '@nestjs/common';
 import { WarehouseService } from './warehouse.service';
 import { RoleActions } from 'src/config/custom-meta-data/set.roles.metadata';
 import { RoleGuard } from 'src/config/guards/role/role.guard';
@@ -14,10 +14,20 @@ export class WarehouseController {
     
     @RoleActions(`${ActionEnums.CAN_VIEW_WAREHOUSES}.${ActionEnums.CAN_STOCK_WAREHOUSE}`)
     @UseGuards(RoleGuard)
-    @Get()
-     
-    getStorages(@Body() req:Request,res:Response){
-        return this.warehouseService.getStorage(req,res)
+    @Post()
+    @UseGuards(AuthGuard('jwt'))
+    warehouseLists(@NestRequest() req,@Query() query: Request){
+        const user = req.user
+        return this.warehouseService.warehouseLists(user,query)
+    }
+
+
+    @RoleActions(`${ActionEnums.CAN_VIEW_WAREHOUSES}.${ActionEnums.CAN_STOCK_WAREHOUSE}`)
+    @UseGuards(RoleGuard)
+    @Get(":id")
+    @UseGuards(AuthGuard('jwt'))
+    warehousedetails(@NestRequest() req,@Param() params){
+        return this.warehouseService.warehouseDetails(req,params)
     }
 
 
@@ -30,7 +40,7 @@ export class WarehouseController {
     async registerWarehouse(@Body() warehouse:WarehouseDto, @NestRequest() req)
     {
         const user = req.user//The logged in user
-        return await this.warehouseService.registerWarehouse(warehouse)
+        // console.log("Testing data",warehouse)
+        return await this.warehouseService.registerWarehouse(warehouse,user)
     }
-    
 }

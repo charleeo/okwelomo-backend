@@ -4,13 +4,17 @@ import { JwtService } from '@nestjs/jwt';
 import { UserService } from '../user/user.service';
 import { logData } from 'src/common/helpers/logging';
 import { instanceToPlain } from 'class-transformer';
+import { ConfigService } from '../config/config.service';
+import { ADMINROLES } from 'src/config/constants';
+import { LoginDto } from './dto/login.dto';
 
 
 @Injectable()
 export class AuthService {
     constructor(
         private readonly userService: UserService,
-        private readonly jwtService: JwtService
+        private readonly jwtService: JwtService,
+        private readonly configService: ConfigService
     ) { }
     /**
      * Check if the email provided matches any record in the database
@@ -25,17 +29,17 @@ export class AuthService {
         if(userData){
             userData.map(userActions=>{actionarrays.push(userActions.tag_line)})
         }
-        user['roleDetails'] = userData
-        user['actions'] = actionarrays
         if (!user) {
             return null
         }
-
+        
         // find if user password match
         const match = await this.comparePassword(pass, user.password);
         if (!match) {
             return null;
         }
+        user['roleDetails'] = userData
+        user['actions'] = actionarrays
         delete user["password"]
         return user;
     }
@@ -78,13 +82,16 @@ export class AuthService {
              
              delete newUser["password"]
             // generate token
-            const token = await this.generateToken(newUser)
+          
             if(newUser){
                 status=true
+                const superAdminRole = await this.configService.getRolesByName(ADMINROLES['super_admin'])
+                newUser['userId'] = newUser.id
+                newUser['roleId'] =  superAdminRole.id
+                await this.configService.assignRoleToUser(newUser)
                 message="User created"
             }
             responseData=newUser
-            responseData.token = token
         } catch (e) {
             error = e.message
         }

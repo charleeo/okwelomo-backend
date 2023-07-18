@@ -1,7 +1,7 @@
 
 import { IsNotEmpty, Length, IsEmail, IsEnum,IsNumber, Validate, } from 'class-validator';
 import { UniqueEmailValidator } from 'src/config/pipes/unique.user.validator';
-import { User } from '../entities/user.entity';
+import { Users } from '../entities/user.entity';
 enum Gender {
     MALE = 'male',
     FEMALE = 'female',
@@ -9,7 +9,7 @@ enum Gender {
 export class CreateUserDto {
     @IsNotEmpty()
     @IsEmail()
-    @Validate(UniqueEmailValidator,[User,"email"])
+    @Validate(UniqueEmailValidator,[Users,"email"])
     public email:string
     
     @IsNotEmpty()

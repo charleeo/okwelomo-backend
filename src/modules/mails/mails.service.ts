@@ -1,6 +1,6 @@
 import { MailerService } from '@nestjs-modules/mailer';
 import { Injectable } from '@nestjs/common';
-import { User } from '../user/entities/user.entity';
+import { Users } from '../user/entities/user.entity';
 import { logErrors } from 'src/common/helpers/logging';
 
 @Injectable()
@@ -23,7 +23,6 @@ export class MailsService {
         });
 
     }catch(e){
-        console.log(e)
         logErrors(e)
     }
   }

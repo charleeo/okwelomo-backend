@@ -40,7 +40,7 @@ export function logData(result,req, message, statusCode,status=false){
         emptyCheck = checkEmptyFile(fullPath)
     }
     if(emptyCheck){
-        console.log(data)
+        
         fs.writeFile(fullPath, JSON.stringify(data),(err)=>{
             if(err) { console.error(err); return}
                 return;

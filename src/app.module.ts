@@ -13,6 +13,9 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { BullModule } from '@nestjs/bull';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { MailsModule } from './modules/mails/mails.module';
+import { InventoryModule } from './modules/inventory/inventory.module';
+
+import { EventModule } from './modules/event/event.module';
 
 
 @Module({
@@ -31,7 +34,9 @@ import { MailsModule } from './modules/mails/mails.module';
     AuthModule,
     CommonConfig,
     WarehouseModule,
-    MailsModule
+    MailsModule,
+    InventoryModule,
+    EventModule,
 ],
   controllers: [],
   providers: [MailsModule],
@@ -39,7 +44,7 @@ import { MailsModule } from './modules/mails/mails.module';
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
       consumer.apply( AuthMiddleware)
-      .exclude("/auth/login","/auth/signup")
+      .exclude("/auth/login","/auth/signup","/config")
       .forRoutes({path:"*",method:RequestMethod.ALL})
     }
   }

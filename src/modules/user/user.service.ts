@@ -10,7 +10,7 @@ import {
 
 import { CreateUserDto } from './dto/create-user.dto'
 import { UpdateUserDto } from './dto/update-user.dto';
-import { User } from './entities/user.entity';
+import { Users } from './entities/user.entity';
 import { UserRepository } from './user.repository';
 
 import { responseStructure } from 'src/common/helpers/response.structure';
@@ -18,7 +18,7 @@ import { logData, logErrors } from 'src/common/helpers/logging';
 import { Request } from 'express'
 import { IsNumber } from 'class-validator';
 import { UserRoleRepository } from '../config/repository/user_roles.repository';
-import { UserRole } from '../config/entities/user.role.entity';
+import { UserRoles } from '../config/entities/user.role.entity';
 import { instanceToPlain } from 'class-transformer';
 import { ActionRepository } from '../config/repository/actions.repository';
 dotenv.config()
@@ -26,40 +26,21 @@ dotenv.config()
 export class UserService {
   constructor(private usersRepository: UserRepository,private userRoelRepo:UserRoleRepository,private actionRepo:ActionRepository){}
 
-  async create(user: CreateUserDto):Promise<User> {
+  async create(user: CreateUserDto):Promise<Users> {
     return await this.usersRepository.save(user)
   }
 
-  findAll(): Promise<User[]> {
+  findAll(): Promise<Users[]> {
     return this.usersRepository.find()
   }
 
-  findOne(id: number): Promise<User | null> {
+  findOne(id: number): Promise<Users | null> {
     return this.usersRepository.findOneBy({ id });
   }
-  findOneByEmail(email: string): Promise<User | null> {
+  findOneByEmail(email: string): Promise<Users | null> {
     return this.usersRepository.findOneBy({ email });
   }
 
-  // async findOneWithRoles(email: string): Promise<any> {
-    
-  //   // const user = await this.usersRepository.createQueryBuilder("user")
-  //   // .leftJoinAndSelect("user.role", "role")
-  //   // .where("user.email = :email", { email })
-  //   // .getRawOne()
-  //   // const actions = await this.userRoelRepo.createQueryBuilder('userRole')
-  //   // .leftJoinAndSelect("roles","roles.id",'userRole.role_id').getOne()
-
-  //   // let roles = instanceToPlain (await this.userRoelRepo.findOneBy({user:user.id}))
-  //   // user.roles = instanceToPlain (roles)
-   
-  // }
-  // async findOneWithRoles(email: string): Promise<User[]> {
-  //   let qb = await this.usersRepository.createQueryBuilder('u')
-  //   .leftJoinAndSelect("u.userRole",'userRole').getMany()
-  //   console.log(qb)
-  //   return qb
-  // }
   async findOneWithRoles(email: string): Promise<any> {
     const user =await this.usersRepository.findOne({
       relations: {
@@ -72,10 +53,12 @@ export class UserService {
     })
    
     const plainUser:any = instanceToPlain(user)
-    const role:UserRole = plainUser.role
     let roleAction=[]
-    if(role){
-      roleAction = role.actions.split(",")
+    if(user){
+      const role:UserRoles = plainUser.role
+      if(role){
+        roleAction = role.actions.split(",")
+      }
     }
 
     return this.getActions(roleAction)
@@ -89,7 +72,7 @@ export class UserService {
     return await this.usersRepository.update(id,updateUserDto)
   }
 
-  async paginate(@Query() query:any, @Req() req: Request): Promise<Pagination<User>> {
+  async paginate(@Query() query:any, @Req() req: Request): Promise<Pagination<Users>> {
     //  let error:any=null
      let status:boolean=false
      let message:string =""
@@ -104,7 +87,7 @@ export class UserService {
        
         qb.orderBy('u.id', 'DESC')
         
-        data = await paginate<User>(qb, {
+        data = await paginate<Users>(qb, {
           page,
           limit,
           route: process.env.APP_URL+"user",

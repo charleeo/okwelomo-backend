@@ -4,7 +4,7 @@ import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Pagination } from 'nestjs-typeorm-paginate';
-import { User } from './entities/user.entity';
+import { Users } from './entities/user.entity';
 
 @Controller('user')
 export class UserController {
@@ -16,7 +16,7 @@ export class UserController {
   }
 
   @Get()
-  async findAll(@Req() req: Request, @Query() query: Request): Promise<Pagination<User>> {
+  async findAll(@Req() req: Request, @Query() query: Request): Promise<Pagination<Users>> {
 
     return this.userService.paginate(query, req);
   }
