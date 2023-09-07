@@ -34,7 +34,8 @@ export class UserService {
     return this.usersRepository.find()
   }
 
-  findOne(id: number): Promise<Users | null> {
+  findOne(id: number): Promise<Users> {
+    console.log("I was called")
     return this.usersRepository.findOneBy({ id });
   }
   findOneByEmail(email: string): Promise<Users | null> {
@@ -77,7 +78,7 @@ export class UserService {
      let status:boolean=false
      let message:string =""
      let data : any=null
-     let error= new BadRequestException("There was an error")
+     let error :string= "There was an error"
       try{
       
         const page = query.page && IsNumber(query.page) ?query.page:1

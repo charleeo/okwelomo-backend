@@ -15,6 +15,7 @@ export class ConfigController {
 
     @Post("create/user/roles")
      async assignRoleToUser(@Body() user: UserRoleDto):Promise<UserRoles> {
+        
         return await this.configService.assignRoleToUser(user)
     }
 }

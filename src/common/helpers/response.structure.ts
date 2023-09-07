@@ -1,7 +1,7 @@
 import { Injectable } from "@nestjs/common";
 
 
-export function responseStructure(status,message,data,statusCode=200):any {
+export function responseStructure(status:boolean,message:string,data,statusCode:number=200):any {
     return {
         data,
         message,

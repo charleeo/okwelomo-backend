@@ -5,6 +5,7 @@ import { AuthService } from './auth.service';
 
 
 import { CreateUserDto } from '../user/dto/create-user.dto';
+import { LoginDto } from './dto/login.dto'
 
 
 @Controller('auth')
@@ -13,13 +14,13 @@ export class AuthController {
 
     @UseGuards(AuthGuard('local'))
     @Post('login')
-    async login(@Request() req) {
-        return await this.authService.login(req.user);
+    async login(@Body() user:LoginDto) {
+        return await this.authService.login(user);
     }
 
 
     @Post('signup')
     async signUp(@Body() user: CreateUserDto) {
-        return await this.authService.createUser(user);
+        return await this.authService.createUser(user)
     }
 }

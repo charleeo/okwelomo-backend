@@ -17,8 +17,8 @@ export class Inventory{
     @Column({type:"text",nullable:false})
     description:string;
 
-    @Column({type:"varchar",nullable:false})
-    qty:string
+    @Column({type:"numeric",nullable:false})
+    qty:number
 
     @ManyToOne(() => Measurement, (measurement) => measurement.inventory)
     @JoinColumn()
@@ -28,20 +28,20 @@ export class Inventory{
     @JoinColumn()
     warehouse: Warehouses
 
-    @Column({type:"varchar",nullable:true,comment:"This how much an item was bought for"})
-    pricePerItem:string 
+    @Column({type:"numeric",nullable:true,comment:"This how much an item was bought for"})
+    pricePerItem:number 
 
-    @Column({type:"varchar",nullable:true,comment:"This how much an item was sold  for"})
-    salesPricePerMeasurement:string
+    @Column({type:"numeric",nullable:true,comment:"This how much an item was sold  for"})
+    salesPerItem:number
 
-    @Column({default:0,type:"varchar",nullable:true})
-    soldQTY:string
+    @Column({default:0,type:"numeric",nullable:true})
+    soldQTY:number
 
-    @Column({type:"varchar", nullable:true})
-    remainder:string
+    @Column({type:"numeric", nullable:true})
+    remainder:number
 
-    @Column({type:"varchar", nullable:true})
-    profit:string
+    @Column({type:"numeric", nullable:true})
+    profit:number
 
     @Column({type:"varchar", nullable:true,default:InventoryStatus.not_sold})
     status:InventoryStatus

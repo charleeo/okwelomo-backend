@@ -1,5 +1,7 @@
 
-import { IsNotEmpty, IsNumber,IsArray, IsOptional, IsString} from 'class-validator';
+import { IsNotEmpty, IsNumber,IsArray, IsOptional, IsString, Validate} from 'class-validator';
+import { UserIdExistValidator } from 'src/config/pipes/use.id.exists.validator';
+import { Users } from 'src/modules/user/entities/user.entity';
 
 export class ActionDto {
 
@@ -39,6 +41,7 @@ export class UserRoleDto {
 
     @IsNotEmpty()
     @IsNumber()
+    // @Validate(UserIdExistValidator,[Users, 'id'])
     public userId:number
     
     @IsNotEmpty()

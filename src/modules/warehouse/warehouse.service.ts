@@ -1,4 +1,5 @@
 import { Injectable,Param,Query } from '@nestjs/common';
+import { Request } from 'express';
 import { WarehouseDto } from './dto/warehouse.dto';
 import { WarehouseRepository } from './repositories/warehouse.repository';
 import { UserCreatedEvent } from 'src/events/user.created.event';
@@ -84,13 +85,12 @@ export class WarehouseService {
       return await this.warehouseRepo.findOneBy({warehouseName:name})
     }
 
-    async  registerWarehouse(warehouse:WarehouseDto,user:Users):Promise<any>{
+    async  createWarehouse(warehouse:WarehouseDto,user:Users):Promise<any>{
         let status =false
         let error = null
         let message = ""
         let responseData =null
         try {
-            
             const createWarehouse = await this.warehouseRepo.save(warehouse);
             if(createWarehouse)
             {   this.createUserAndWarehouseRelationship(user.id,createWarehouse.id)

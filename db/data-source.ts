@@ -17,7 +17,7 @@ export const datasourceOption: DataSourceOptions={
     migrations : ['dist/db/migrations/*.js'],
     logging:false,
     migrationsRun:false,
-    subscribers:[]
+    subscribers:[],
 }
 
 const datasource = new DataSource(datasourceOption)

@@ -12,30 +12,21 @@ export class InventoryDto {
     
     @IsNotEmpty()
 
-    public qty:string
+    public qty:number
 
     @IsNotEmpty()
     public measurement:Measurement
 
     @IsNotEmpty()
     public warehouse:Warehouses
-    
-    @IsOptional()
-    @Length(6,225)
-    public capacity:string
 
 
     @IsOptional()
-    @Length(6,225)
-    public pricePerItem:string
+    public pricePerItem:number
 
     @IsOptional()
-    @Length(6,225)
-    public salePerItem:string
-    
-    @IsOptional()
-    @Length(6,225)
-    public salesPricePerMeasurement:string
+    public salesPerItem:number
+
 }
 
 export class InventoryArrayDto {

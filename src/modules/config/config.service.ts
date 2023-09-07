@@ -18,6 +18,9 @@ import { LocationRepository } from './repository/locations.repository';
 import { WarehouseCategoryRepository } from './repository/warehouse.category.repository';
 import { logErrors } from 'src/common/helpers/logging';
 import { MeasurementRepository } from './repository/measurement.repository';
+import { UserRepository } from '../user/user.repository';
+import { Duties } from './entities/duties.entity';
+import { Actions } from './entities/actions.entity';
 
 
 @Injectable()
@@ -32,6 +35,7 @@ export class ConfigService {
         private readonly locationRepo:LocationRepository,
         private readonly warehouseCategoryRepo:WarehouseCategoryRepository,
         private readonly measurementRepo:MeasurementRepository,
+        private readonly userRepo:UserRepository,
         ){}
 
     async create():Promise<any> {
@@ -88,32 +92,23 @@ export class ConfigService {
         let status:boolean =false
         let message:string =""
         let responseData:any =null
+        
         try{
-            let userId = userRole.userId
-            let roleId = userRole.roleId
-            let dutyId = userRole.dutyId
-            let actionIds = userRole.actions
-            let assignmentStatus = 1
-            let selectedRole = await this.roleRepo.findOneBy({id:roleId})
-            if(ADMINROLES.includes(selectedRole.role)){
-               
-                dutyId = (await this.dutyRepo.findOneBy({name:ALLDUTIES})).id
-                let actions = await this.actionRepo.find({select:['id']})
-                let actionsArray=[]
-                actions.map(a=> actionsArray.push (a.id))
-                actionIds=actionsArray
-            }
-            else{
-                
-                let noDuty = await this.dutyRepo.findOneBy({id:dutyId})
-                actionIds = Array.from( new Set(actionIds))//only non repeating items
-                if(noDuty.name == NOTASSIGNED){
-                    actionIds = [(await this.actionRepo.findOneBy({tag_line:NOACTIONASSIGNED})).id]
-                    assignmentStatus=0
-                }
-            }
-            actionIds= actionIds.join(",")
-            const data ={user:userId,roleId,dutyId, actions: actionIds,status:assignmentStatus}
+
+            let userId:number = userRole.userId
+            let roleId:number = userRole.roleId
+            let dutyId:number = userRole.dutyId
+            let actionIds:string[] = userRole.actions
+           if(! await this.userRepo.findOneBy({id:userId}))
+           {
+            message="provided userId is invalid"
+            return responseStructure(status,error??message,responseData)
+           }
+            let selectedRole:Roles = await this.roleRepo.findOneBy({id:roleId})
+          
+            let {duty,status:assignmentStatus,actions} = await this.formatRole(selectedRole,dutyId,actionIds)
+            let actionId:string= actions.join(",")
+            const data ={user:userId,roleId,dutyId:duty, actions: actionId,status:assignmentStatus}
             this.userRoleRepo.upsert(data,['user'])
         }catch(e){
 
@@ -125,5 +120,39 @@ export class ConfigService {
 
     async getRolesByName(role:string):Promise<Roles>{
         return await this.roleRepo.findOneBy({role})
+    }
+    async getDutiessByName(name:string):Promise<Duties>{
+        return await this.dutyRepo.findOneBy({name})
+    }
+    async getAllActions():Promise<any[]>{
+        const actions= await this.actionRepo.find()
+        const actionIds:number[]=[]
+        actions.map(action=>{
+            actionIds.push(action.id)
+        })
+        return actionIds
+    }
+
+    async formatRole(selectedRole:Roles,dutyId:number,actionIds:any)
+    {
+        let assignmentStatus=1
+        console.log(selectedRole)
+        if(ADMINROLES.includes(selectedRole.role)){
+            dutyId = (await this.dutyRepo.findOneBy({name:ALLDUTIES})).id
+            let actions = await this.actionRepo.find({select:['id']})
+            let actionsArray=[]
+            actions.map(a=> actionsArray.push (a.id))
+            actionIds=actionsArray
+        }
+        else{
+            
+            let noDuty = await this.dutyRepo.findOneBy({id:dutyId})
+            actionIds = Array.from( new Set(actionIds))//only non repeating items
+            if(noDuty.name == NOTASSIGNED){
+                actionIds = [(await this.actionRepo.findOneBy({tag_line:NOACTIONASSIGNED})).id]
+                assignmentStatus=0
+            }
+        }
+        return {duty:dutyId,status:assignmentStatus,actions:actionIds}
     }
 }

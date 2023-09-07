@@ -12,6 +12,7 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidateInputPipe)
   app.useGlobalInterceptors(new LoggerInterceptor())
   app.use(cookieParser())
+  app.enableCors()
   // app.use(compression())
   useContainer(app.select(AppModule), { fallbackOnErrors: true })
   await app.listen(port)

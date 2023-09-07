@@ -1,4 +1,4 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule,RequestMethod} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { PassportModule } from '@nestjs/passport';
@@ -9,6 +9,8 @@ import { JwtStrategy } from './jwt.strategy';
 import { UserModule } from '../user/user.module';
 import { AuthMiddleware } from 'src/middleware/auth/auth.middleware';
 import { ConfigModule } from '../config/config.module';
+
+import { LoginMiddleware } from 'src/middleware/login/login.middleware';
 
 
 @Module({
@@ -30,8 +32,7 @@ import { ConfigModule } from '../config/config.module';
 })
 export class AuthModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-      consumer.apply(AuthMiddleware)
-      .exclude("/auth/login","/auth/signup")
-      .forRoutes(AuthController)
+      consumer.apply(LoginMiddleware)
+      .forRoutes({ path: 'auth/login', method: RequestMethod.POST });
   }
 }

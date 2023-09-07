@@ -35,12 +35,10 @@ export class WarehouseController {
     @UseGuards(RoleGuard)
     
     @UseGuards(AuthGuard('jwt'))
-    @Post('/register')
+    @Post('/create')
      
-    async registerWarehouse(@Body() warehouse:WarehouseDto, @NestRequest() req)
+    async createWarehouse(@Body() warehouse:WarehouseDto, @NestRequest() req)
     {
-        const user = req.user//The logged in user
-        // console.log("Testing data",warehouse)
-        return await this.warehouseService.registerWarehouse(warehouse,user)
+        return await this.warehouseService.createWarehouse(warehouse,req.user)
     }
 }

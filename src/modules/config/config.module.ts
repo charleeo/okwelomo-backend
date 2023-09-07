@@ -9,10 +9,11 @@ import { AuthMiddleware } from 'src/middleware/auth/auth.middleware';
 import { LocationRepository } from './repository/locations.repository';
 import { WarehouseCategoryRepository } from './repository/warehouse.category.repository';
 import { MeasurementRepository } from './repository/measurement.repository';
+import { UserRepository } from '../user/user.repository';
 
 
 @Module({
-  providers: [ConfigService,ActionRepository,RoleRepository,DutyRepository,UserRoleRepository,LocationRepository,WarehouseCategoryRepository,MeasurementRepository],
+  providers: [ConfigService,ActionRepository,RoleRepository,DutyRepository,UserRoleRepository,LocationRepository,WarehouseCategoryRepository,MeasurementRepository,UserRepository],
   controllers: [ConfigController],
   exports:[ConfigService,RoleRepository,ActionRepository,DutyRepository,UserRoleRepository,LocationRepository]
 })

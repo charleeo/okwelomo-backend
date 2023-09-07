@@ -9,6 +9,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { InventoryService } from './inventory.service';
 import { InventoryArrayDto, InventoryDto, SearchDto } from './dto/inventory.dto';
 import { InventoryUpdateDto } from './dto/update.inventory.dto';
+import { InventoryStockUpdateDto } from './dto/update.stock.inventory.dto';
 
 @Controller('inventory')
 export class InventoryController {
@@ -55,5 +56,16 @@ export class InventoryController {
     async updateInventory(@Body() inventory:InventoryUpdateDto)
     {
         return await this.inventoryService.updateInventory(inventory)
+    }
+
+
+    @RoleActions(`${ActionEnums.CAN_REGISTER_WAREHOUSE}`)
+    @UseGuards(RoleGuard)
+    
+    @UseGuards(AuthGuard('jwt'))
+    @Post('/update/stock')
+    async updateInventoryStock(@Body() inventory:InventoryStockUpdateDto)
+    {
+        return await this.inventoryService.updateInventoryStockStatus(inventory)
     }
 }

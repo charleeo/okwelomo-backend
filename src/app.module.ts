@@ -16,6 +16,7 @@ import { MailsModule } from './modules/mails/mails.module';
 import { InventoryModule } from './modules/inventory/inventory.module';
 
 import { EventModule } from './modules/event/event.module';
+import { AdminModule } from './modules/admin/admin.module';
 
 
 @Module({
@@ -37,6 +38,7 @@ import { EventModule } from './modules/event/event.module';
     MailsModule,
     InventoryModule,
     EventModule,
+    AdminModule,
 ],
   controllers: [],
   providers: [MailsModule],

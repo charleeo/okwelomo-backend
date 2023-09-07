@@ -11,6 +11,8 @@ import { InventoryRepository } from './repository/inventory.repository';
 import { Inventory } from './entities/inventory.entity';
 import { WarehouseRepository } from '../warehouse/repositories/warehouse.repository';
 import { InventoryUpdateDto } from './dto/update.inventory.dto';
+import { InventoryStockUpdateDto } from './dto/update.stock.inventory.dto';
+import { InventoryStatus } from '../entities/common.type';
 @Injectable()
 export class InventoryService {
     constructor(
@@ -152,4 +154,58 @@ export class InventoryService {
         }
         return { status, error,message,response : responseData}
     }
+    /**
+     * This is meant to update the available items in stock. The quantity sold and the quantity left. Profit can also be calculated if the cost price and sales price were given
+     * @param inventory 
+     */
+    async updateInventoryStockStatus(stokcUpdateDTO:InventoryStockUpdateDto):Promise<any>{
+        let status:boolean =false
+        let error:string|object = null
+        let message:string = ""
+        let responseData:object =null
+        try{
+            let qb = await this.inventoryRepo.createQueryBuilder("inventory")
+            .where("inventory.id=:id",{id:stokcUpdateDTO.id})
+    
+            if(!qb.getOne()){
+                message="inventory not found"
+            }else{
+                const inventory:Inventory= await qb.getOne()
+                const objectToBeUpdated:any =  await this.formatDataForUpdate(inventory,stokcUpdateDTO)
+                const updateWasExecuted = await qb.update().set({...objectToBeUpdated}).execute()
+                if(updateWasExecuted){
+                    status=true
+                    message="data updated"
+                }
+            }
+            responseData=await qb.getOne()
+        }catch(e){
+            logErrors(e)
+            error=e.message
+        }
+        return { status, error,message,response : responseData}
+    }
+
+    private async formatDataForUpdate(inventory:Inventory,updateData:InventoryStockUpdateDto){
+        let remainder:number|any|null = inventory.remainder??0
+        let status:InventoryStatus=null
+        let profit =0;
+        const qty = inventory.qty
+        const soldQTY = updateData.soldQTY
+        let salesPerItem = updateData.salesPerItem
+        let pricePerItem = updateData.pricePerItem
+        if(!remainder || remainder===undefined){
+            remainder = +qty - soldQTY
+        }
+        status = +qty <= remainder? InventoryStatus.sold:InventoryStatus.partialy_sold
+        if(pricePerItem !== undefined && salesPerItem !==undefined){
+            const totalCostPrice = +qty * pricePerItem
+            const totalSalesPrice = soldQTY * salesPerItem
+            const profitDerivation = totalSalesPrice - totalCostPrice
+            profit = profitDerivation >0? profitDerivation:profit
+        }
+
+        return {profit,soldQTY,remainder,pricePerItem,salesPerItem,status}
+    }
+
 }
