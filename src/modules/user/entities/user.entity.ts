@@ -1,72 +1,54 @@
+import { Exclude } from 'class-transformer';
 
-import { Exclude } from "class-transformer"
-
-import { Gender } from "src/modules/entities/common.type"
-import { Roles } from "../../config/entities/roles.entity"
-import { 
-    Entity ,
-    PrimaryGeneratedColumn,
-    Column,
-    CreateDateColumn,
-    UpdateDateColumn,
-    OneToMany,
-    OneToOne,
-    JoinColumn,
-    JoinTable,
-    ManyToMany,
-    ManyToOne,
-    Generated
-} from "typeorm"
-import { UserRoles } from "src/modules/config/entities/user.role.entity"
-import { Warehouses } from "src/modules/warehouse/entities/warehouse.entity"
-import { UsersWarehouses } from "src/modules/warehouse/entities/users.warehouses.entity"
-
-
+import { Gender } from 'src/modules/entities/common.type';
+import { Roles } from '../../config/entities/roles.entity';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  OneToMany,
+  OneToOne,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  ManyToOne,
+  Generated,
+} from 'typeorm';
+import { UserRoles } from 'src/modules/config/entities/user.role.entity';
+import { Warehouses } from 'src/modules/warehouse/entities/warehouse.entity';
+import { UsersWarehouses } from 'src/modules/warehouse/entities/users.warehouses.entity';
+import { KYC } from 'src/modules/clients/kyc/entities/kyc.entity';
 
 @Entity()
 export class Users {
+  @PrimaryGeneratedColumn({ unsigned: true })
+  id: number;
 
-    @PrimaryGeneratedColumn({unsigned:true})
-    id : number
+  @Column()
+  @Generated('uuid')
+  uuid: string;
 
-    @Column()
-    @Generated("uuid")
-    uuid: string
+  @Column({ unique: true, type: 'varchar' })
+  email: string;
 
-    @Column({unique:true,type:"varchar"})
-    email:string
+  @Column({ type: 'varchar' })
+  @Exclude()
+  password: string;
 
-    @Column({type:"varchar"})
-    @Exclude()
-    password:string
+  @OneToOne(() => UserRoles, (role) => role.user)
+  role: UserRoles;
 
-    @Column({
-        type: "enum",
-        enum: Gender,
-        default: Gender.MALE
-    })
-    gender: Gender
- 
-    @Column({length:225})
-    firstname:string
+  @OneToOne(() => KYC, (kyc) => kyc.user)
+  kyc: KYC;
 
-    @Column({length:225,nullable:true})
-    lastname:string
+  @OneToMany(() => UsersWarehouses, (userWarehouse) => userWarehouse.user)
+  userWarehouses: UsersWarehouses[];
 
-    @Column({type:"text", nullable:true})
-    bio:string
+  @CreateDateColumn()
+  created_at: Date;
 
-    
-    @OneToOne(() => UserRoles, role => role.user)
-    role: UserRoles
-   
-    @OneToMany(() => UsersWarehouses, (userWarehouse) => userWarehouse.user)
-    userWarehouses: UsersWarehouses[]
-
-    @CreateDateColumn()
-    created_at:Date
-
-    @UpdateDateColumn()
-    updated_at:Date
-
+  @UpdateDateColumn()
+  updated_at: Date;
 }

@@ -4,6 +4,6 @@
     {"role_name":"manager - GMD","role":"gmd"},
     {"role_name":"branch manager","role":"branch_manager"},
     {"role_name":"regional manager","role":"regional-manager"},
-    {"role_name":"stock keeper","role":"stock_keeper"},
-    {"role_name":"inventory manager","role":"inventory_manager"}
+    {"role_name":"account officer","role":"account_officer"},
+    {"role_name":"loan officer","role":"loan officer"}
 ]

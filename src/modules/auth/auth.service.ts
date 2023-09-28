@@ -1,4 +1,4 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, HttpStatus } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from '../user/user.service';
@@ -10,7 +10,7 @@ import { LoginDto } from './dto/login.dto';
 import { Roles } from '../config/entities/roles.entity';
 import { Action } from 'rxjs/internal/scheduler/Action';
 import { Actions } from '../config/entities/actions.entity';
-
+import { responseStructure } from 'src/common/helpers/response.structure';
 @Injectable()
 export class AuthService {
   constructor(
@@ -48,7 +48,7 @@ export class AuthService {
     return user;
   }
 
-  public async login(req) {
+  public async login(req, res) {
     let status: boolean;
     let error: string | null;
     let message = '';
@@ -72,10 +72,12 @@ export class AuthService {
     }
 
     logData(responseData, Request, error ?? message, code);
-    return { status, error, message, data: responseData };
+    return res
+      .status(HttpStatus.OK)
+      .send(responseStructure(status, message, responseData, HttpStatus.OK));
   }
 
-  public async createUser(user) {
+  public async createUser(user, res) {
     let status = false;
     let error = null;
     let message = '';
@@ -98,7 +100,11 @@ export class AuthService {
     } catch (e) {
       error = e.message;
     }
-    return { status, error, message, response: responseData };
+    return res
+      .status(HttpStatus.CREATED)
+      .send(
+        responseStructure(status, message, responseData, HttpStatus.CREATED),
+      );
   }
 
   private async generateToken(user) {

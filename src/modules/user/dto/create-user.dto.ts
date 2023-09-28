@@ -10,10 +10,7 @@ import {
 } from 'class-validator';
 import { UniqueEmailValidator } from 'src/config/pipes/unique.user.validator';
 import { Users } from '../entities/user.entity';
-enum Gender {
-  MALE = 'male',
-  FEMALE = 'female',
-}
+
 export class CreateUserDto {
   @IsNotEmpty()
   @IsEmail()
@@ -21,28 +18,11 @@ export class CreateUserDto {
   public email: string;
 
   @IsNotEmpty()
-  @Length(2, 225)
-  public firstname: string;
-
-  @IsNotEmpty()
-  @Length(2, 225)
-  public lastname: string;
-
-  @IsNotEmpty()
   @Matches(
-    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&^<>])[A-Za-z\d@$!%*?&^<>]{7,}$/,
     {
-      message: `$property must have a lower case, an upper case, a number and a minimum of 10 characters`,
+      message: `$property must have a lower case, an upper case, a number, a special character and a minimum of 10 characters`,
     },
   )
   public password: string;
-
-  @IsOptional()
-  //   @IsNotEmpty()
-  //   @Length(20)
-  public bio: string;
-
-  @IsNotEmpty()
-  @IsEnum(Gender)
-  public gender: Gender;
 }

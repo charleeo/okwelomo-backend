@@ -1,4 +1,11 @@
-import { BadRequestException, DefaultValuePipe, Injectable, ParseIntPipe, Query, Req } from '@nestjs/common';
+import {
+  BadRequestException,
+  DefaultValuePipe,
+  Injectable,
+  ParseIntPipe,
+  Query,
+  Req,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as dotenv from 'dotenv';
@@ -8,34 +15,37 @@ import {
   IPaginationOptions,
 } from 'nestjs-typeorm-paginate';
 
-import { CreateUserDto } from './dto/create-user.dto'
+import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Users } from './entities/user.entity';
 import { UserRepository } from './user.repository';
 
 import { responseStructure } from 'src/common/helpers/response.structure';
 import { logData, logErrors } from 'src/common/helpers/logging';
-import { Request } from 'express'
+import { Request } from 'express';
 import { IsNumber } from 'class-validator';
 import { UserRoleRepository } from '../config/repository/user_roles.repository';
 import { UserRoles } from '../config/entities/user.role.entity';
 import { instanceToPlain } from 'class-transformer';
 import { ActionRepository } from '../config/repository/actions.repository';
-dotenv.config()
+dotenv.config();
 @Injectable()
 export class UserService {
-  constructor(private usersRepository: UserRepository,private userRoelRepo:UserRoleRepository,private actionRepo:ActionRepository){}
+  constructor(
+    private usersRepository: UserRepository,
+    private userRoelRepo: UserRoleRepository,
+    private actionRepo: ActionRepository,
+  ) {}
 
-  async create(user: CreateUserDto):Promise<Users> {
-    return await this.usersRepository.save(user)
+  async create(user: CreateUserDto): Promise<Users> {
+    return await this.usersRepository.save(user);
   }
 
   findAll(): Promise<Users[]> {
-    return this.usersRepository.find()
+    return this.usersRepository.find();
   }
 
   findOne(id: number): Promise<Users> {
-    console.log("I was called")
     return this.usersRepository.findOneBy({ id });
   }
   findOneByEmail(email: string): Promise<Users | null> {
@@ -43,74 +53,75 @@ export class UserService {
   }
 
   async findOneWithRoles(email: string): Promise<any> {
-    const user =await this.usersRepository.findOne({
+    const user = await this.usersRepository.findOne({
       relations: {
-          role: true,
+        role: true,
       },
       where: {
-          email: email,
+        email: email,
       },
+    });
 
-    })
-   
-    const plainUser:any = instanceToPlain(user)
-    let roleAction=[]
-    if(user){
-      const role:UserRoles = plainUser.role
-      if(role){
-        roleAction = role.actions.split(",")
+    const plainUser: any = instanceToPlain(user);
+    let roleAction = [];
+    if (user) {
+      const role: UserRoles = plainUser.role;
+      if (role) {
+        roleAction = role.actions.split(',');
       }
     }
 
-    return this.getActions(roleAction)
+    return this.getActions(roleAction);
   }
 
   async remove(id: number): Promise<void> {
-    await this.usersRepository.delete(id)
+    await this.usersRepository.delete(id);
   }
 
- async update(id: number, updateUserDto: UpdateUserDto) {
-    return await this.usersRepository.update(id,updateUserDto)
+  async update(id: number, updateUserDto: UpdateUserDto) {
+    return await this.usersRepository.update(id, updateUserDto);
   }
 
-  async paginate(@Query() query:any, @Req() req: Request): Promise<Pagination<Users>> {
+  async paginate(
+    @Query() query: any,
+    @Req() req: Request,
+  ): Promise<Pagination<Users>> {
     //  let error:any=null
-     let status:boolean=false
-     let message:string =""
-     let data : any=null
-     let error :string= "There was an error"
-      try{
-      
-        const page = query.page && IsNumber(query.page) ?query.page:1
-        const limit = (query.limit && IsNumber(query.limit)) ?query.limit:20
-       
-         const qb = this.usersRepository.createQueryBuilder('u');
-       
-        qb.orderBy('u.id', 'DESC')
-        
-        data = await paginate<Users>(qb, {
-          page,
-          limit,
-          route: process.env.APP_URL+"user",
-        })
-        if(data['items'].length >0){
-          message="Data found"
-          status=true
-        }
-        
-        logData(data,req,message,200,status)
-      }catch(e){
-        error=e.message
-        logErrors(e.message);
+    let status = false;
+    let message = '';
+    let data: any = null;
+    let error = 'There was an error';
+    try {
+      const page = query.page && IsNumber(query.page) ? query.page : 1;
+      const limit = query.limit && IsNumber(query.limit) ? query.limit : 20;
+
+      const qb = this.usersRepository.createQueryBuilder('u');
+
+      qb.orderBy('u.id', 'DESC');
+
+      data = await paginate<Users>(qb, {
+        page,
+        limit,
+        route: process.env.APP_URL + 'user',
+      });
+      if (data['items'].length > 0) {
+        message = 'Data found';
+        status = true;
       }
-      return responseStructure(status,error??message,data)
+
+      logData(data, req, message, 200, status);
+    } catch (e) {
+      error = e.message;
+      logErrors(e.message);
+    }
+    return responseStructure(status, error ?? message, data);
   }
 
   async getActions(actionIds) {
-    return await  this.actionRepo
-     .createQueryBuilder("action")
-    .whereInIds(actionIds)
-    .getMany()
+    return await this.actionRepo
+      .createQueryBuilder('action')
+      .whereInIds(actionIds)
+      .getMany();
     // return await this.actionRepo.createQueryBuilder('action')
     // .where('action.id IN (:...ids)', {
     //   ids: actionIds,
@@ -118,5 +129,3 @@ export class UserService {
     // .getMany();
   }
 }
-
-
