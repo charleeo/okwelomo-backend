@@ -70,6 +70,14 @@ export class KYC {
   @Column({ type: 'text', comment: 'Business or house address' })
   address: string;
 
+  @Column({
+    type: 'text',
+    comment:
+      'yes is verified and no is not verified, review is when it is under review',
+    default: 'no',
+  })
+  kyc_verification_status: string;
+
   @OneToOne(() => Users)
   @JoinColumn()
   user: Users;

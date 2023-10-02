@@ -8,6 +8,7 @@ import {
   Get,
   Query,
   Param,
+  Delete,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { CreateKYCDTO } from './dto/create.dto';
@@ -39,5 +40,10 @@ export class KycController {
   @Get(':id')
   async show(@Res() res: Response, @Param() param: any): Promise<any> {
     return await this.kcyService.show(res, param);
+  }
+
+  @Delete(':id')
+  async delete(@Res() res: Response, @Param() param: any): Promise<KYC> {
+    return await this.kcyService.destroy(res, param);
   }
 }

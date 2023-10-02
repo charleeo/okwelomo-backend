@@ -8,6 +8,7 @@ import { logErrors } from 'src/common/helpers/logging';
 import { responseStructure } from 'src/common/helpers/response.structure';
 import { Response, query } from 'express';
 import { Pagination, paginate } from 'nestjs-typeorm-paginate';
+import { instanceToPlain } from 'class-transformer';
 
 @Injectable()
 export class KycService {
@@ -19,7 +20,7 @@ export class KycService {
     @Res() response: Response,
   ): Promise<any> {
     let status = false;
-    let error = null;
+    let statusCode: HttpStatus;
     let message = '';
     let responseData = null;
 
@@ -37,16 +38,16 @@ export class KycService {
       if (responseData !== null) {
         status = true;
         message = 'KYC record created';
+        statusCode = HttpStatus.CREATED;
       }
     } catch (e) {
       logErrors(e);
-      error = e.message;
+      message = 'there was an error. please try again';
+      statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
     }
     return response
-      .status(HttpStatus.CREATED)
-      .send(
-        responseStructure(status, message, responseData, HttpStatus.CREATED),
-      );
+      .status(statusCode)
+      .send(responseStructure(status, message, responseData, statusCode));
   }
 
   async findOne(value: any, fieldName: any): Promise<KYC> {
@@ -61,7 +62,7 @@ export class KycService {
     let error = null;
     let message = '';
     let responseData = null;
-
+    let statusCode: HttpStatus;
     try {
       const qb = await this.kycRepo
         .createQueryBuilder('kyc')
@@ -80,44 +81,71 @@ export class KycService {
         message = 'Data found';
         status = true;
       }
+      statusCode = HttpStatus.OK;
     } catch (e) {
       logErrors(e);
       error = e.message;
+      statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
+      message = 'There was an error';
     }
 
     return response
-      .status(HttpStatus.CREATED)
-      .send(
-        responseStructure(status, message, responseData, HttpStatus.CREATED),
-      );
+      .status(statusCode)
+      .send(responseStructure(status, message, responseData, statusCode));
   }
 
   async show(@Res() response: Response, @Param() params): Promise<any> {
     let status = false;
     let message = '';
-    let responseData = null;
+    let responseData: object = null;
+    let statusCode: HttpStatus;
 
     try {
       const kycId = params.id;
       responseData = await this.kycRepo.findOne({
         where: { id: kycId },
-        relations: {
-          user: true,
-        },
+        relations: { user: true },
       });
 
       if (responseData) {
         message = 'KYC data found';
         status = true;
       } else message = 'No kyc found';
+      statusCode = HttpStatus.OK;
     } catch (e) {
+      message = 'there was an error. please try again';
+      statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
       logErrors(e.message);
     }
 
     return response
-      .status(HttpStatus.CREATED)
-      .send(
-        responseStructure(status, message, responseData, HttpStatus.CREATED),
-      );
+      .status(statusCode)
+      .send(responseStructure(status, message, responseData, statusCode));
+  }
+
+  async destroy(@Res() response: Response, @Param() params): Promise<any> {
+    let status = false;
+    let message = '';
+    const responseData = null;
+    let statusCode: HttpStatus;
+    try {
+      const kycId = params.id;
+      const kyc = await this.kycRepo.findOneBy({ id: kycId });
+
+      if (kyc) {
+        await this.kycRepo.delete({ id: kyc.id });
+        message = 'KYC data deleted';
+        status = true;
+      } else message = 'KYC not found';
+      statusCode = HttpStatus.OK;
+    } catch (e) {
+      message = 'There was an error';
+      logErrors(e.message);
+      statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
+    }
+
+    return response
+      .status(statusCode)
+      .send(responseStructure(status, message, responseData, statusCode));
   }
 }
