@@ -19,7 +19,7 @@ export class CreateUserDto {
 
   @IsNotEmpty()
   @Matches(
-    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&^<>])[A-Za-z\d@$!%*?&^<>]{7,}$/,
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?#&^<>])[A-Za-z\d@$!%*?#&^<>]{7,}$/,
     {
       message: `$property must have a lower case, an upper case, a number, a special character and a minimum of 10 characters`,
     },
