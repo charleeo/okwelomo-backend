@@ -38,11 +38,6 @@ export class CreateKYCDTO {
   @Length(11)
   nin: string;
 
-  // @ValidateIf((req) => !req.phone && !req.nin, {
-  //   message:
-  //     'bvn is required when neither nin nor phone number is not provided',
-  // })
-
   @Validate(ValidateField, [KYC, 'bvn'])
   @IsOptional()
   @Length(12)

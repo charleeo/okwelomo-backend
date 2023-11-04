@@ -46,13 +46,6 @@ export class KYC {
   })
   nin: string;
 
-  // @Column({
-  //   unique: true,
-  //   type: 'varchar',
-  //   nullable: true,
-  // })
-  // referal_code: string;
-
   @Column({
     type: 'enum',
     enum: Gender,
@@ -82,8 +75,7 @@ export class KYC {
   @Column({
     type: 'enum',
     enum: KYCLevel,
-    comment:
-      'All newly created users will be on level one untill verified',
+    comment: 'All newly created users will be on level one untill verified',
     default: KYCLevel.level_one,
   })
   kyc_level: KYCLevel;

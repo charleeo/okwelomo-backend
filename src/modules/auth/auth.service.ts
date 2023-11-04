@@ -16,7 +16,6 @@ export class AuthService {
   constructor(
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
-    private readonly configService: ConfigService,
   ) {}
   /**
    * Check if the email provided matches any record in the database
@@ -92,7 +91,6 @@ export class AuthService {
       // generate token
 
       if (newUser) {
-        await this.assignRolesDynamically(newUser);
         status = true;
         message = 'User created';
       }
@@ -118,28 +116,11 @@ export class AuthService {
   }
 
   private async hashPassword(password) {
-    const hash = await bcrypt.hash(password, 10);
-    return hash;
+    return await bcrypt.hash(password, 10);
   }
 
   private async comparePassword(enteredPassword, dbPassword) {
     const match = await bcrypt.compare(enteredPassword, dbPassword);
     return match;
-  }
-
-  async assignRolesDynamically(user) {
-    const all_duties_object = await this.configService.getDutiessByName(
-      ALLDUTIES,
-    );
-    const all_duties = instanceToPlain(all_duties_object);
-    const superAdminRole: Roles = await this.configService.getRolesByName(
-      ADMINROLES['super_admin'],
-    );
-    const actions: number[] = await this.configService.getAllActions();
-    user['userId'] = user.id;
-    user['roleId'] = superAdminRole.id;
-    user['dutyId'] = all_duties.id;
-    user['actions'] = actions;
-    await this.configService.assignRoleToUser(user);
   }
 }

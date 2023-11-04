@@ -6,9 +6,9 @@ import {
 import { Injectable } from '@nestjs/common';
 import { KycService } from '../kyc.service';
 
-@ValidatorConstraint({ name: 'validate_phone', async: true })
+@ValidatorConstraint({ name: 'id', async: true })
 @Injectable()
-export class ValidateField implements ValidatorConstraintInterface {
+export class ValidateKYCId implements ValidatorConstraintInterface {
   constructor(private readonly service: KycService) {}
 
   validate = async (
@@ -17,16 +17,14 @@ export class ValidateField implements ValidatorConstraintInterface {
   ): Promise<boolean> => {
     const [entityClass, fieldName] = args.constraints;
     const entity = await this.service.findOne(value, fieldName);
-    if (entity) {
+    if (!entity) {
       return false;
-    } else {
-      return true;
-    }
+    } else return true;
     // return !entity;
   };
 
   defaultMessage(args: ValidationArguments) {
     const [entityClass, fieldName] = args.constraints;
-    return `${fieldName} '${args.value}' has already been taken`;
+    return `${fieldName} '${args.value}' was not found`;
   }
 }

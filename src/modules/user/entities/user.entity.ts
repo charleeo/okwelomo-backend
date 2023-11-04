@@ -33,6 +33,12 @@ export class Users {
   @Column({ unique: true, type: 'varchar' })
   email: string;
 
+  @Column({ nullable: true, type: 'varchar' })
+  firstname: string;
+
+  @Column({ nullable: true, type: 'varchar' })
+  lastname: string;
+
   @Column({ type: 'varchar' })
   @Exclude()
   password: string;

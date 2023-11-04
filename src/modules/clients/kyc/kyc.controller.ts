@@ -15,6 +15,7 @@ import { CreateKYCDTO } from './dto/create.dto';
 import { KycService } from './kyc.service';
 import { KYC } from './entities/kyc.entity';
 import { AuthGuard } from '@nestjs/passport';
+import { VerifyKYCDTO } from './dto/verify.dto';
 
 @Controller('kyc')
 @UseGuards(AuthGuard('jwt'))
@@ -29,6 +30,14 @@ export class KycController {
   ): Promise<any> {
     const user = req.user;
     return await this.kcyService.create(kyc, user, res);
+  }
+
+  @Post('update/status')
+  async updateKYCStatus(
+    @Body() kyc: VerifyKYCDTO,
+    @Res() res: Response,
+  ): Promise<any> {
+    return await this.kcyService.updateKYCStatus(kyc, res);
   }
 
   @Get('all')

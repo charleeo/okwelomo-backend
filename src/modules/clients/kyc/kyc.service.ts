@@ -9,6 +9,8 @@ import { responseStructure } from 'src/common/helpers/response.structure';
 import { Response, query } from 'express';
 import { Pagination, paginate } from 'nestjs-typeorm-paginate';
 import { instanceToPlain } from 'class-transformer';
+import { KYCStatus } from 'src/modules/entities/common.type';
+import { VerifyKYCDTO } from './dto/verify.dto';
 
 @Injectable()
 export class KycService {
@@ -25,7 +27,6 @@ export class KycService {
     let responseData = null;
 
     try {
-      //checking for an existing kyc records
       if (await this.findOne(user.id, 'user_id')) {
         message = 'KYC record exists';
         return response
@@ -135,6 +136,40 @@ export class KycService {
       if (kyc) {
         await this.kycRepo.delete({ id: kyc.id });
         message = 'KYC data deleted';
+        status = true;
+      } else message = 'KYC not found';
+      statusCode = HttpStatus.OK;
+    } catch (e) {
+      message = 'There was an error';
+      logErrors(e.message);
+      statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
+    }
+
+    return response
+      .status(statusCode)
+      .send(responseStructure(status, message, responseData, statusCode));
+  }
+
+  async updateKYCStatus(
+    kycDto: VerifyKYCDTO,
+    @Res() response: Response,
+  ): Promise<any> {
+    let status = false;
+    let message = '';
+    let responseData = null;
+    let statusCode: HttpStatus;
+    try {
+      const kyc = await this.kycRepo.findOneBy({ id: kycDto.kyc_id });
+
+      if (kyc) {
+        await this.kycRepo.update(
+          { id: kyc.id },
+          {
+            kyc_verification_status: kycDto.status,
+          },
+        );
+        message = 'KYC status updated to ' + kycDto.status;
+        responseData = kyc;
         status = true;
       } else message = 'KYC not found';
       statusCode = HttpStatus.OK;

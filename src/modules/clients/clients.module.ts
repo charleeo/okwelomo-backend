@@ -7,10 +7,19 @@ import { KYCRepository } from './kyc/repositories/kyc.repository';
 import { Users } from '../user/entities/user.entity';
 import { ValidateField } from './kyc/Validations/ValidateField';
 import { KycMiddleware } from 'src/middleware/kyc/kyc.middleware';
+import { ValidateKYCId } from './kyc/Validations/ValidateKYCId';
 
 @Module({
   controllers: [KycController, LoansController],
-  providers: [LoansService, KycService, KYCRepository, Users, ValidateField],
+  providers: [
+    LoansService,
+    KycService,
+    KYCRepository,
+    Users,
+    ValidateField,
+    ValidateKYCId,
+  ],
+  imports: [],
 })
 export class ClientsModule {
   configure(consumer: MiddlewareConsumer) {
