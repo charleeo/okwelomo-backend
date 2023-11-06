@@ -4,7 +4,7 @@ import { JwtService } from '@nestjs/jwt';
 import { UserService } from '../user/user.service';
 import { logData } from 'src/common/helpers/logging';
 import { instanceToPlain } from 'class-transformer';
-import { ConfigService } from '../config/config.service';
+import { ConfigService } from '../config/services/config.service';
 import { ADMINROLES, ALLDUTIES } from 'src/config/constants';
 import { LoginDto } from './dto/login.dto';
 import { Roles } from '../config/entities/roles.entity';
@@ -56,12 +56,16 @@ export class AuthService {
     try {
       // user = instanceToPlain(user)//convert it into a plain object
       const user = await this.userService.findOneByEmail(req.email);
+
       const token = await this.generateToken(instanceToPlain(user));
       if (token) {
         status = true;
         message = 'Token generated and login successful';
         code = 200;
       }
+      delete user['password'];
+      delete user['created_at'];
+      delete user['updated_at'];
       responseData = user;
       responseData.token = token;
     } catch (e) {

@@ -1,0 +1,37 @@
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  OneToOne,
+  JoinColumn,
+  Generated,
+} from 'typeorm';
+
+@Entity()
+export class LoanRepayment {
+  @PrimaryGeneratedColumn({ unsigned: true })
+  id: number;
+
+  @Column()
+  @Generated('uuid')
+  uuid: string;
+
+  @Column({ type: 'decimal', default: 0.0 })
+  amount: number;
+
+  @Column({ type: 'varchar' })
+  reference: string;
+
+  @Column({ type: 'jsonb', default: {} })
+  repayments_data: object;
+
+  @Column({ type: 'date', default: new Date() })
+  next_repayment_date: Date;
+
+  @CreateDateColumn()
+  created_at: Date;
+  @UpdateDateColumn()
+  updated_at: Date;
+}

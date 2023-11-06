@@ -8,8 +8,7 @@ import { logErrors } from 'src/common/helpers/logging';
 import { responseStructure } from 'src/common/helpers/response.structure';
 import { Response, query } from 'express';
 import { Pagination, paginate } from 'nestjs-typeorm-paginate';
-import { instanceToPlain } from 'class-transformer';
-import { KYCStatus } from 'src/modules/entities/common.type';
+
 import { VerifyKYCDTO } from './dto/verify.dto';
 
 @Injectable()
@@ -33,6 +32,7 @@ export class KycService {
           .status(HttpStatus.BAD_REQUEST)
           .send(responseStructure(status, message, {}, HttpStatus.BAD_REQUEST));
       }
+
       kyc['user'] = user.id; //always use the key that is in your entity defination, in this case, it is user and not userId
       kyc['user_id'] = user.id;
       responseData = await this.kycRepo.save(kyc);

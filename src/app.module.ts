@@ -12,13 +12,12 @@ import { ConfigModule } from '@nestjs/config';
 
 import { ConfigModule as CommonConfig } from './modules/config/config.module';
 import { AuthModule } from './modules/auth/auth.module';
-import { WarehouseModule } from './modules/warehouse/warehouse.module';
+
 import { AuthMiddleware } from './middleware/auth/auth.middleware';
 import { ScheduleModule } from '@nestjs/schedule';
 import { BullModule } from '@nestjs/bull';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { MailsModule } from './modules/mails/mails.module';
-import { InventoryModule } from './modules/inventory/inventory.module';
 
 import { EventModule } from './modules/event/event.module';
 import { AdminModule } from './modules/admin/admin.module';
@@ -40,9 +39,7 @@ import { ClientsModule } from './modules/clients/clients.module';
     UserModule,
     AuthModule,
     CommonConfig,
-    WarehouseModule,
     MailsModule,
-    InventoryModule,
     EventModule,
     AdminModule,
     AccountModule,

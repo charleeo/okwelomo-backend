@@ -11,7 +11,7 @@ import {
 } from 'typeorm';
 
 @Entity()
-export class Locations {
+export class LoanCategory {
   @PrimaryGeneratedColumn({ type: 'int', unsigned: true })
   id: number;
 
@@ -20,7 +20,10 @@ export class Locations {
   uuid: string;
 
   @Column({ type: 'varchar', length: 225, unique: true })
-  locationName: string;
+  category_name: string;
+
+  @Column({ type: 'varchar', length: 225, unique: true })
+  category_tagline: string;
 
   @CreateDateColumn()
   createdAt: Date;

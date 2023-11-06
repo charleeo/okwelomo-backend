@@ -30,3 +30,8 @@ export enum KYCLevel {
   level_two = 2,
   level_three = 3,
 }
+
+export enum userCategory {
+  admin = 'is_admin',
+  user = 'is_user',
+}

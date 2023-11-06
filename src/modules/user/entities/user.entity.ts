@@ -17,8 +17,6 @@ import {
   Generated,
 } from 'typeorm';
 import { UserRoles } from 'src/modules/config/entities/user.role.entity';
-import { Warehouses } from 'src/modules/warehouse/entities/warehouse.entity';
-import { UsersWarehouses } from 'src/modules/warehouse/entities/users.warehouses.entity';
 import { KYC } from 'src/modules/clients/kyc/entities/kyc.entity';
 
 @Entity()
@@ -43,14 +41,14 @@ export class Users {
   @Exclude()
   password: string;
 
+  @Column({ type: 'bool', default: false })
+  is_admin: boolean;
+
   @OneToOne(() => UserRoles, (role) => role.user)
   role: UserRoles;
 
   @OneToOne(() => KYC, (kyc) => kyc.user)
   kyc: KYC;
-
-  @OneToMany(() => UsersWarehouses, (userWarehouse) => userWarehouse.user)
-  userWarehouses: UsersWarehouses[];
 
   @CreateDateColumn()
   created_at: Date;

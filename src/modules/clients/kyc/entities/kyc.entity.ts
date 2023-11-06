@@ -92,10 +92,3 @@ export class KYC {
   @UpdateDateColumn()
   updated_at: Date;
 }
-// type KYCStatus = {
-//    no:string,
-//    verified:string,
-//    no:string,
-//    no:string,
-//    no:string,
-//  }

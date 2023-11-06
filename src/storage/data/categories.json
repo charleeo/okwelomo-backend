@@ -1,11 +1,15 @@
 [
     {
-        "categoryName":"Business Headquarters",
-        "categoryTag":"headquarters"
+        "categoryName":"Daily Loans",
+        "categoryTag":"daily"
     },
     
     {
-        "categoryName":"Business Branch",
-        "categoryTag":"branches"
+        "categoryName":"Monthly Loans",
+        "categoryTag":"monthly"
+    },
+    {
+        "categoryName":"Yearly Loans",
+        "categoryTag":"yearly"
     }
 ]
