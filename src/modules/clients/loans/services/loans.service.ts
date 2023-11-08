@@ -40,15 +40,13 @@ export class LoansService extends ConfigHelperService {
     const user = await this.getUser(req);
 
     try {
-      statusCode = HttpStatus.OK;
-      const amount = dto.amount;
-      const grantedDate = dto.grantedDate;
-
       const {
         repayment_amount,
         interest,
         repayment_commencement_date,
         repayment_due_date,
+        amount,
+        start_date,
       } = await this.processLoans(dto);
 
       responseData = await this.loanRepo.save({
@@ -59,7 +57,7 @@ export class LoansService extends ConfigHelperService {
         repayment_rate: repayment_amount,
         repayment_due_date: repayment_due_date,
         repayment_start_date: repayment_commencement_date,
-        issue_date: grantedDate,
+        issue_date: start_date,
         reference: reference(),
       });
 
@@ -130,6 +128,8 @@ export class LoansService extends ConfigHelperService {
       repayment_amount: repaymentAmount,
       repayment_due_date: repaymentDueDate,
       repayment_commencement_date: repaymentCommencementDate,
+      amount: amount,
+      start_date: grantedDate,
     };
   }
 
@@ -163,6 +163,8 @@ export class LoansService extends ConfigHelperService {
       repayment_amount: repaymentAmount,
       repayment_due_date: repaymentDueDate,
       repayment_commencement_date: repaymentCommencementDate,
+      amount: amount,
+      start_date: grantedDate,
     };
   }
 
