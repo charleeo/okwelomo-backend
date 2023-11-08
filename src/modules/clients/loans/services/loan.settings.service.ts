@@ -1,4 +1,5 @@
 import { HttpStatus, Injectable, Res, Request } from '@nestjs/common';
+import * as bcrypt from 'bcrypt';
 import { responseStructure } from 'src/common/helpers/response.structure';
 import { logErrors } from 'src/common/helpers/logging';
 import { Response } from 'express';
@@ -6,10 +7,14 @@ import { LoanSettingRepository } from '../repositories/loan.setting.repository';
 import { LoanSettingDTO } from '../dto/loan.setting.dto';
 import { LoanSetting } from '../entities/loan.settings.entity';
 import { ConfigHelperService } from 'src/modules/config/services/helpers.config';
+import { LoanCategoryRepository } from 'src/modules/config/repository/loan.category.repository';
 
 @Injectable()
 export class LoanSettingService extends ConfigHelperService {
-  constructor(private loanSettingRepo: LoanSettingRepository) {
+  constructor(
+    private loanSettingRepo: LoanSettingRepository,
+    private readonly loanCatRep: LoanCategoryRepository,
+  ) {
     super();
   }
 
@@ -55,7 +60,7 @@ export class LoanSettingService extends ConfigHelperService {
     const user = await this.getUser(req);
 
     const config = await this.loanSettingRepo.save({
-      application_password: dto.password,
+      application_password: await bcrypt.hash(dto.password, 10),
       default_loan_type: dto.default_loan_type,
       receiving_account: dto.receiving_account,
       receiving_bank: dto.receiving_bank,
@@ -87,12 +92,16 @@ export class LoanSettingService extends ConfigHelperService {
     await this.loanSettingRepo.update(
       { client_id: user.id },
       {
-        application_password: dto.password,
+        application_password: await bcrypt.hash(dto.password, 10),
         default_loan_type: dto.default_loan_type,
         receiving_account: dto.receiving_account,
         receiving_bank: dto.receiving_bank,
       },
     );
     return await this.findOne(user.id);
+  }
+
+  async getCategoriesById(id) {
+    return await this.loanCatRep.findOne({ where: { id } });
   }
 }

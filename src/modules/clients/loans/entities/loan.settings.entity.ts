@@ -1,3 +1,4 @@
+import { Exclude } from 'class-transformer';
 import {
   Column,
   Entity,
@@ -19,6 +20,7 @@ export class LoanSetting {
   client_id: number;
 
   @Column({ nullable: true })
+  @Exclude()
   application_password: string;
 
   @Column({ nullable: true })

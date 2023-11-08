@@ -9,10 +9,23 @@ import {
   IsEnum,
   ValidateIf,
   MaxLength,
+  IsDate,
 } from 'class-validator';
 
-export class ApplyForLoanDTO {
+export class LoanApplicationDto {
   @IsNotEmpty()
   @IsNumber()
   public amount: number;
+
+  @IsNotEmpty()
+  // @IsDate()
+  public grantedDate: Date;
+
+  @IsNotEmpty()
+  @IsNumber()
+  public categoryId: number;
+
+  @IsOptional()
+  @IsNumber()
+  public repaymentDuration: number;
 }

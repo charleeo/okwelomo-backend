@@ -8,7 +8,6 @@ import adminUsers from '../../../storage/data/super_tech_admin.json';
 import actions from '../../../storage/data/actions.json';
 import locations from '../../../storage/data/locations.json';
 import duties from '../../../storage/data/duties.json';
-import categories from '../../../storage/data/categories.json';
 
 import { Roles } from '../entities/roles.entity';
 import { UserRoleRepository } from '../repository/user_roles.repository';
@@ -69,7 +68,21 @@ export class ConfigService {
         responseData['locations'] = 'Locations created';
       });
 
-      categories.map((cat) => {
+      //constructing the loan category object instead of manually creating it
+      const categoryObjects = [
+        {
+          categoryName: 'Daily Repayment',
+          categoryTag: 'daily',
+        },
+      ];
+      for (let i = 1; i < 13; i++) {
+        categoryObjects.push({
+          categoryName: `${i} Month${i === 1 ? '' : 's'} Repayment`,
+          categoryTag: `${i}_month${i === 1 ? '' : 's'}`,
+        });
+      }
+
+      categoryObjects.map((cat) => {
         this.loanCategory.upsert(
           {
             category_name: cat.categoryName,
@@ -138,9 +151,20 @@ export class ConfigService {
   async getRolesByName(role: string): Promise<Roles> {
     return await this.roleRepo.findOneBy({ role });
   }
+
+  /**
+   *
+   * @param name
+   * @returns
+   */
   async getDutiessByName(name: string): Promise<Duties> {
     return await this.dutyRepo.findOneBy({ name });
   }
+
+  /**
+   *
+   * @returns
+   */
   async getAllActions(): Promise<any[]> {
     const actions = await this.actionRepo.find();
     const actionIds: number[] = [];
@@ -150,6 +174,13 @@ export class ConfigService {
     return actionIds;
   }
 
+  /**
+   *
+   * @param selectedRole
+   * @param dutyId
+   * @param actionIds
+   * @returns
+   */
   async formatRole(selectedRole: Roles, dutyId: number, actionIds: any) {
     let assignmentStatus = 1;
 
@@ -211,5 +242,9 @@ export class ConfigService {
     user['dutyId'] = all_duties.id;
     user['actions'] = actions;
     await this.assignRoleToUser(user);
+  }
+
+  async getCategoriesById(id) {
+    return await this.loanCategory.findOne({ where: { id } });
   }
 }

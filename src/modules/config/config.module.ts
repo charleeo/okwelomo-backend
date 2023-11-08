@@ -4,7 +4,7 @@ import {
   MiddlewareConsumer,
   RequestMethod,
 } from '@nestjs/common';
-import { ConfigService } from './services/config.service';
+
 import { ConfigController } from './config.controller';
 import { ActionRepository } from './repository/actions.repository';
 import { RoleRepository } from './repository/roles.repository';
@@ -15,10 +15,10 @@ import { LocationRepository } from './repository/locations.repository';
 
 import { UserRepository } from '../user/user.repository';
 import { LoanCategoryRepository } from './repository/loan.category.repository';
+import { ConfigService } from './services/config.service';
 
 @Module({
   providers: [
-    ConfigService,
     ActionRepository,
     RoleRepository,
     DutyRepository,
@@ -26,16 +26,17 @@ import { LoanCategoryRepository } from './repository/loan.category.repository';
     LocationRepository,
     UserRepository,
     LoanCategoryRepository,
+    ConfigService,
   ],
   controllers: [ConfigController],
   exports: [
-    ConfigService,
     RoleRepository,
     ActionRepository,
     DutyRepository,
     UserRoleRepository,
     LocationRepository,
     LoanCategoryRepository,
+    ConfigService,
   ],
 })
 export class ConfigModule implements NestModule {

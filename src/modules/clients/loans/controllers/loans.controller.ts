@@ -11,7 +11,7 @@ import {
   Delete,
 } from '@nestjs/common';
 import { Response } from 'express';
-import { ApplyForLoanDTO } from '../dto/apply.for.loan.dto';
+import { LoanApplicationDto } from '../dto/apply.for.loan.dto';
 import { LoansService } from '../services/loans.service';
 import { AuthGuard } from '@nestjs/passport';
 
@@ -21,7 +21,10 @@ export class LoansController {
   constructor(private loanService: LoansService) {}
 
   @Post('apply')
-  async create(loan: ApplyForLoanDTO, @Res() res: Response): Promise<any> {
+  async create(
+    @Body() loan: LoanApplicationDto,
+    @Res() res: Response,
+  ): Promise<any> {
     return await this.loanService.applayForLoan(loan, res);
   }
 }

@@ -13,6 +13,9 @@ import { LoanRepository } from './loans/repositories/loan.repository';
 import { LoanSettingRepository } from './loans/repositories/loan.setting.repository';
 import { LoanSettingService } from './loans/services/loan.settings.service';
 import { LoanSettingController } from './loans/controllers/loan-setting.controller';
+import { IsAdminMiddleware } from 'src/middleware/is-admin/is-admin.middleware';
+import { IsNotAdminMiddleware } from 'src/middleware/is-not-admin/is-not-admin.middleware';
+import { LoanCategoryRepository } from '../config/repository/loan.category.repository';
 
 @Module({
   controllers: [KycController, LoansController, LoanSettingController],
@@ -26,6 +29,7 @@ import { LoanSettingController } from './loans/controllers/loan-setting.controll
     ValidateKYCId,
     LoanRepository,
     LoanSettingRepository,
+    LoanCategoryRepository,
   ],
   imports: [],
   exports: [LoanSettingRepository],
@@ -33,10 +37,16 @@ import { LoanSettingController } from './loans/controllers/loan-setting.controll
 export class ClientsModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
-      .apply(KycMiddleware)
+      .apply(KycMiddleware, IsNotAdminMiddleware)
       .forRoutes({ path: '/kyc/create', method: RequestMethod.POST });
     consumer
-      .apply(VerifyKycMiddleware)
+      .apply(IsNotAdminMiddleware)
+      .forRoutes(
+        { path: 'loan-setting', method: RequestMethod.POST },
+        { path: 'loans/apply', method: RequestMethod.POST },
+      );
+    consumer
+      .apply(IsAdminMiddleware)
       .forRoutes({ path: '/kyc/update/status', method: RequestMethod.POST });
   }
 }
