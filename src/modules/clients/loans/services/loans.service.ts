@@ -42,19 +42,14 @@ export class LoansService extends ConfigHelperService {
     try {
       statusCode = HttpStatus.OK;
       const amount = dto.amount;
-      const categoryId = dto.categoryId;
       const grantedDate = dto.grantedDate;
-
-      const category = await this.loanSettingService.getCategoriesById(
-        categoryId,
-      );
 
       const {
         repayment_amount,
         interest,
         repayment_commencement_date,
         repayment_due_date,
-      } = this.processLoans(dto, category);
+      } = await this.processLoans(dto);
 
       responseData = await this.loanRepo.save({
         customer_id: user.id,
@@ -171,7 +166,10 @@ export class LoansService extends ConfigHelperService {
     };
   }
 
-  protected processLoans(dto, category) {
+  protected async processLoans(dto) {
+    const category = await this.loanSettingService.getCategoriesById(
+      dto.categoryId,
+    );
     if (category.category_tagline === this.DAILY) {
       return this.dailyLoansFormating(dto);
     }
