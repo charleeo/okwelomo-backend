@@ -39,7 +39,7 @@ export class Loan {
   repayment_sum: number;
 
   @Column({ type: 'varchar', default: 0 })
-  repayment_rate: string;
+  repayment_rate: number;
 
   @Column({ type: 'date', default: null })
   repayment_due_date: Date;

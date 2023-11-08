@@ -24,7 +24,8 @@ export class LoansController {
   async create(
     @Body() loan: LoanApplicationDto,
     @Res() res: Response,
+    @NestRequest() req: Request,
   ): Promise<any> {
-    return await this.loanService.applayForLoan(loan, res);
+    return await this.loanService.applayForLoan(loan, res, req);
   }
 }

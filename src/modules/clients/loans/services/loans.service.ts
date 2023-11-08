@@ -1,11 +1,4 @@
-import {
-  HttpStatus,
-  Injectable,
-  Res,
-  Body,
-  Query,
-  Param,
-} from '@nestjs/common';
+import { HttpStatus, Injectable, Res, Body, Request } from '@nestjs/common';
 import { LoanRepository } from '../repositories/loan.repository';
 import { LoanApplicationDto } from '../dto/apply.for.loan.dto';
 import { Users } from 'src/modules/user/entities/user.entity';
@@ -14,18 +7,23 @@ import { logErrors } from 'src/common/helpers/logging';
 import { Response } from 'express';
 import { LoanSettingService } from './loan.settings.service';
 import {
+  reference,
   setPaymentCommencementDateDaily,
   setPaymentCommencementDateMonthly,
+  setPaymentDueDateDaily,
+  setPaymentDueDateMonthly,
 } from 'src/common/helpers/generals';
+import { ConfigHelperService } from 'src/modules/config/services/helpers.config';
 
 @Injectable()
-export class LoansService {
+export class LoansService extends ConfigHelperService {
   private readonly DAILY: string;
   private readonly REPAYMENTDURATION: number;
   constructor(
     private readonly loanRepo: LoanRepository,
     private readonly loanSettingService: LoanSettingService,
   ) {
+    super();
     this.DAILY = 'daily';
     this.REPAYMENTDURATION = 12;
   }
@@ -33,46 +31,47 @@ export class LoansService {
   async applayForLoan(
     @Body() dto: LoanApplicationDto,
     @Res() response: Response,
+    @Request() req: Request,
   ): Promise<any> {
-    const status = false;
+    let status = false;
     let statusCode: HttpStatus;
     let message = '';
-    const responseData = null;
+    let responseData = null;
+    const user = await this.getUser(req);
 
     try {
       statusCode = HttpStatus.OK;
       const amount = dto.amount;
       const categoryId = dto.categoryId;
       const grantedDate = dto.grantedDate;
-      const repaymentDuration = dto.repaymentDuration ?? this.REPAYMENTDURATION;
 
       const category = await this.loanSettingService.getCategoriesById(
         categoryId,
       );
 
-      let repaymentCommencementDate = null;
-      let repaymentAmount = 0;
+      const {
+        repayment_amount,
+        interest,
+        repayment_commencement_date,
+        repayment_due_date,
+      } = this.processLoans(dto, category);
 
-      if (category.category_tagline === this.DAILY) {
-        repaymentCommencementDate = setPaymentCommencementDateDaily(
-          grantedDate,
-          repaymentDuration,
-        );
-        repaymentAmount = this.calCulateDailyRepaymentPlan(amount);
-      } else {
-        const paymentPlan = category.category_tagline.split('_')[0];
-        const plan = parseInt(paymentPlan);
+      responseData = await this.loanRepo.save({
+        customer_id: user.id,
+        type: dto.categoryId,
+        amount: amount,
+        interest: interest,
+        repayment_rate: repayment_amount,
+        repayment_due_date: repayment_due_date,
+        repayment_start_date: repayment_commencement_date,
+        issue_date: grantedDate,
+        reference: reference(),
+      });
 
-        repaymentCommencementDate = setPaymentCommencementDateMonthly(
-          grantedDate,
-          repaymentDuration,
-        );
-
-        repaymentAmount = this.calculateMonthlyRepaymentPlan(
-          amount,
-          repaymentDuration,
-          plan,
-        );
+      if (responseData) {
+        message = 'Data creted';
+        status = true;
+        statusCode = HttpStatus.CREATED;
       }
     } catch (e) {
       logErrors(e);
@@ -103,7 +102,79 @@ export class LoansService {
     paymentPlan: number | any,
   ) {
     const paymentIntervals = repaymentDuration / paymentPlan;
-    const repaymentAmount = amount / paymentIntervals;
-    return repaymentAmount;
+    return amount / paymentIntervals;
+  }
+  /**
+   *
+   * @param amount
+   * @param repaymentDuration
+   */
+  protected calculateMonthlyRepaymentInterval(
+    repaymentDuration = 12,
+    paymentPlan: number | any,
+  ): number {
+    return repaymentDuration / paymentPlan;
+  }
+
+  protected calculateInterest(amount, rate): number {
+    return (rate / 100) * amount;
+  }
+
+  protected dailyLoansFormating(dto): any {
+    const amount = dto.amount;
+    const grantedDate = dto.grantedDate;
+    const repaymentCommencementDate: Date =
+      setPaymentCommencementDateDaily(grantedDate);
+    const repaymentAmount: number = this.calCulateDailyRepaymentPlan(amount);
+    const repaymentDueDate: Date = setPaymentDueDateDaily(
+      repaymentCommencementDate,
+    );
+    const interest = this.calculateInterest(amount, 15);
+    return {
+      interest: interest,
+      repayment_amount: repaymentAmount,
+      repayment_due_date: repaymentDueDate,
+      repayment_commencement_date: repaymentCommencementDate,
+    };
+  }
+
+  protected monthlyLoansFormating(dto, category): any {
+    const amount = dto.amount;
+
+    const grantedDate = dto.grantedDate;
+    const repaymentDuration = dto.repaymentDuration ?? this.REPAYMENTDURATION;
+
+    const interest: number = this.calculateInterest(amount, 20);
+    const paymentPlan = category.category_tagline.split('_')[0];
+
+    const plan = parseInt(paymentPlan);
+
+    const repaymentCommencementDate: Date = setPaymentCommencementDateMonthly(
+      grantedDate,
+      plan,
+    );
+
+    const repaymentAmount: number = this.calculateMonthlyRepaymentPlan(
+      amount,
+      repaymentDuration,
+      plan,
+    );
+    const repaymentDueDate: Date = setPaymentDueDateMonthly(
+      grantedDate,
+      repaymentDuration,
+    );
+    return {
+      interest: interest,
+      repayment_amount: repaymentAmount,
+      repayment_due_date: repaymentDueDate,
+      repayment_commencement_date: repaymentCommencementDate,
+    };
+  }
+
+  protected processLoans(dto, category) {
+    if (category.category_tagline === this.DAILY) {
+      return this.dailyLoansFormating(dto);
+    }
+    return this.monthlyLoansFormating(dto, category);
   }
 }
