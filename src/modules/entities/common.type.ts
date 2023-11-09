@@ -18,7 +18,7 @@ export enum InventoryStatus {
   not_sold = 'not_sold',
 }
 
-export enum KYCStatus {
+export enum VerificationEnums {
   verified = 'verified',
   no = 'not_verified',
   pending = 'pending',

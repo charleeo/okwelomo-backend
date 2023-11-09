@@ -1,6 +1,10 @@
 import { Exclude } from 'class-transformer';
 
-import { Gender, KYCLevel, KYCStatus } from 'src/modules/entities/common.type';
+import {
+  Gender,
+  KYCLevel,
+  VerificationEnums,
+} from 'src/modules/entities/common.type';
 import { Users } from 'src/modules/user/entities/user.entity';
 
 import {
@@ -52,6 +56,13 @@ export class Loan {
 
   @Column({ type: 'varchar' })
   reference: string;
+
+  @Column({
+    type: 'enum',
+    default: VerificationEnums.pending,
+    enum: VerificationEnums,
+  })
+  verification_status: VerificationEnums;
 
   @CreateDateColumn()
   created_at: Date;

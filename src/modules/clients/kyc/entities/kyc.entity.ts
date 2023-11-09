@@ -1,6 +1,10 @@
 import { Exclude } from 'class-transformer';
 
-import { Gender, KYCLevel, KYCStatus } from 'src/modules/entities/common.type';
+import {
+  Gender,
+  KYCLevel,
+  VerificationEnums,
+} from 'src/modules/entities/common.type';
 import { Users } from 'src/modules/user/entities/user.entity';
 
 import {
@@ -65,12 +69,12 @@ export class KYC {
 
   @Column({
     type: 'enum',
-    enum: KYCStatus,
+    enum: VerificationEnums,
     comment:
       'verified is verified and no is not verified, review is when it is under review',
-    default: KYCStatus.pending,
+    default: VerificationEnums.pending,
   })
-  kyc_verification_status: KYCStatus;
+  kyc_verification_status: VerificationEnums;
 
   @Column({
     type: 'enum',
