@@ -1,11 +1,4 @@
-import { Exclude } from 'class-transformer';
-
-import {
-  Gender,
-  KYCLevel,
-  VerificationEnums,
-} from 'src/modules/entities/common.type';
-import { Users } from 'src/modules/user/entities/user.entity';
+import { ApprovalStatus } from 'src/modules/entities/common.type';
 
 import {
   Entity,
@@ -13,8 +6,6 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
-  OneToOne,
-  JoinColumn,
   Generated,
 } from 'typeorm';
 
@@ -33,13 +24,13 @@ export class Loan {
   @Column({ type: 'int' })
   customer_id: number;
 
-  @Column({ type: 'decimal', default: 0.0 })
+  @Column({ type: 'decimal', default: 0.0, precision: 10, scale: 2 })
   amount: number;
 
-  @Column({ type: 'decimal', default: 0.0 })
+  @Column({ type: 'decimal', default: 0.0, precision: 10, scale: 2 })
   interest: number;
 
-  @Column({ type: 'decimal', default: 0.0 })
+  @Column({ type: 'decimal', default: 0.0, precision: 10, scale: 2 })
   repayment_sum: number;
 
   @Column({ type: 'varchar', default: 0 })
@@ -59,10 +50,10 @@ export class Loan {
 
   @Column({
     type: 'enum',
-    default: VerificationEnums.pending,
-    enum: VerificationEnums,
+    default: ApprovalStatus.pending,
+    enum: ApprovalStatus,
   })
-  verification_status: VerificationEnums;
+  verification_status: ApprovalStatus;
 
   @CreateDateColumn()
   created_at: Date;

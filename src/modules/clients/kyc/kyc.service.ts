@@ -10,6 +10,7 @@ import { Response, query } from 'express';
 import { Pagination, paginate } from 'nestjs-typeorm-paginate';
 
 import { VerifyKYCDTO } from './dto/verify.dto';
+import { VerificationEnums } from 'src/modules/entities/common.type';
 
 @Injectable()
 export class KycService {
@@ -55,6 +56,26 @@ export class KycService {
     const data = await this.kycRepo.findOne({
       where: { [`${fieldName}`]: value },
     });
+    return data;
+  }
+
+  async findPendingKYC(user: Users): Promise<KYC> {
+    const data = await this.kycRepo
+      .createQueryBuilder('kyc')
+      .where('kyc.kyc_verification_status = :status', {
+        status: VerificationEnums.pending,
+      })
+      .andWhere('kyc.user_id = :userId', { userId: user.id })
+      .getOne();
+
+    return data;
+  }
+  async findKYCByUserId(user: Users): Promise<KYC> {
+    const data = await this.kycRepo
+      .createQueryBuilder('kyc')
+      .where('kyc.user_id = :userId', { userId: user.id })
+      .getOne();
+
     return data;
   }
 

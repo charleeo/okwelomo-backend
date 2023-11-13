@@ -6,7 +6,6 @@ import {
   IsNumber,
   Validate,
   Matches,
-  IsOptional,
 } from 'class-validator';
 import { UniqueEmailValidator } from 'src/config/pipes/unique.user.validator';
 import { Users } from '../entities/user.entity';

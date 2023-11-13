@@ -23,6 +23,10 @@ import { EventModule } from './modules/event/event.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { AccountModule } from './modules/account/account.module';
 import { ClientsModule } from './modules/clients/clients.module';
+import { excludedRoutes } from './routes/exclude.';
+import { LoanConfigMustBeSetMiddleware } from './middleware/loan/loan-config-must-be-set/loan-config-must-be-set.middleware';
+import { LoanSettingService } from './modules/clients/loans/services/loan.settings.service';
+import { ConfigMiddlewareHelperService } from './modules/config/services/helpers.middleware.config';
 
 @Module({
   imports: [
@@ -46,13 +50,16 @@ import { ClientsModule } from './modules/clients/clients.module';
     ClientsModule,
   ],
   controllers: [],
-  providers: [MailsModule],
+  providers: [MailsModule, LoanSettingService, ConfigMiddlewareHelperService],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(AuthMiddleware)
-      .exclude('/auth/login', '/auth/signup', '/config')
+      .exclude(...excludedRoutes)
       .forRoutes({ path: '*', method: RequestMethod.ALL });
+    consumer
+      .apply(LoanConfigMustBeSetMiddleware)
+      .forRoutes({ path: '/loans/apply', method: RequestMethod.POST });
   }
 }

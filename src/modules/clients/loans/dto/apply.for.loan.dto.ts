@@ -1,16 +1,4 @@
-import {
-  IsNotEmpty,
-  IsNumber,
-  IsArray,
-  IsOptional,
-  IsString,
-  Validate,
-  Length,
-  IsEnum,
-  ValidateIf,
-  MaxLength,
-  IsDate,
-} from 'class-validator';
+import { IsNotEmpty, IsNumber, IsArray, IsOptional } from 'class-validator';
 
 export class LoanApplicationDto {
   @IsNotEmpty()

@@ -1,26 +1,28 @@
 import {
   Injectable,
   NestMiddleware,
-  HttpStatus,
   UnauthorizedException,
+  HttpStatus,
 } from '@nestjs/common';
-import { NextFunction, Request, Response } from 'express';
+import { NextFunction, Request } from 'express';
+
 import { responseStructure } from 'src/common/helpers/response.structure';
-import { LoansService } from 'src/modules/clients/loans/services/loans.service';
+import { KycService } from 'src/modules/clients/kyc/kyc.service';
+import { LoanSettingService } from 'src/modules/clients/loans/services/loan.settings.service';
 import { ConfigMiddlewareHelperService } from 'src/modules/config/services/helpers.middleware.config';
 
 @Injectable()
-export class PreventDupplicatesMiddleware implements NestMiddleware {
+export class LoanConfigMustBeSetMiddleware implements NestMiddleware {
   constructor(
-    private readonly loanService: LoansService,
+    private readonly loanSettingService: LoanSettingService,
     private readonly configService: ConfigMiddlewareHelperService,
   ) {}
   async use(req: Request, res: Response, next: NextFunction) {
     const user = await this.configService.getUser(req);
-    const pendingLoan = await this.loanService.getAloanForAUSer(user);
-    if (pendingLoan) {
+    const userKyc = await this.loanSettingService.findOne(user.id);
+    if (!userKyc) {
       const message =
-        'You have un approved loan pendign. Please contact your laon officer to approve it before applying for a new loan';
+        'Please configure your application information before applying';
       throw new UnauthorizedException(
         responseStructure(false, message, {}, HttpStatus.UNAUTHORIZED),
       );

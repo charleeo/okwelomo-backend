@@ -1,7 +1,7 @@
-import { KycMiddleware } from './kyc.middleware';
+import { KYCInputVaidtion } from './kyc.input.validation.middleware';
 
 describe('KycMiddleware', () => {
   it('should be defined', () => {
-    expect(new KycMiddleware()).toBeDefined();
+    expect(new KYCInputVaidtion()).toBeDefined();
   });
 });

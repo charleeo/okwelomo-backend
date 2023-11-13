@@ -24,6 +24,12 @@ export enum VerificationEnums {
   pending = 'pending',
   reviewed = 'reviewed',
 }
+export enum ApprovalStatus {
+  verified = 'pending',
+  no = 'approved',
+  pending = 'declined',
+  reviewed = 'reviewed',
+}
 
 export enum KYCLevel {
   level_one = 1,

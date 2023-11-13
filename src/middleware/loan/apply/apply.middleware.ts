@@ -5,20 +5,19 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { NextFunction, Request, Response } from 'express';
-import { verifyToken } from 'src/common/helpers/jwt';
+
 import { responseStructure } from 'src/common/helpers/response.structure';
-('@nestjs/common');
+import { ConfigMiddlewareHelperService } from 'src/modules/config/services/helpers.middleware.config';
 
 @Injectable()
 export class ApplyMiddleware implements NestMiddleware {
-  use(req: Request, res: Response, next: NextFunction) {
+  constructor(private readonly configService: ConfigMiddlewareHelperService) {}
+  async use(req: Request, res: Response, next: NextFunction) {
     let message = '';
-    const authorization = req.get('authorization');
-    const jwtPayload = authorization.replace('Bearer', '').trim();
-    const verifiedToken = verifyToken(jwtPayload);
-    const isAdmin = verifiedToken.payload.is_admin;
+    const isAdmin = (await this.configService.getUser(req)).is_admin;
+
     if (isAdmin) {
-      message = 'You must be an admin to verify KYC';
+      message = "Admins can't apply for loaanss";
       throw new UnauthorizedException(
         responseStructure(false, message, {}, HttpStatus.UNAUTHORIZED),
       );

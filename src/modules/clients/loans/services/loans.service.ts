@@ -14,6 +14,9 @@ import {
   setPaymentDueDateMonthly,
 } from 'src/common/helpers/generals';
 import { ConfigHelperService } from 'src/modules/config/services/helpers.config';
+import { Loan } from '../entities/loan.entity';
+import { VerificationEnums } from 'src/modules/entities/common.type';
+import { ApproveLoanDto } from '../dto/verify.loan.dto';
 
 @Injectable()
 export class LoansService extends ConfigHelperService {
@@ -97,6 +100,7 @@ export class LoansService extends ConfigHelperService {
     const paymentIntervals = repaymentDuration / paymentPlan;
     return amount / paymentIntervals;
   }
+
   /**
    *
    * @param amount
@@ -113,6 +117,9 @@ export class LoansService extends ConfigHelperService {
     return (rate / 100) * amount;
   }
 
+  /**
+   * Format the daily loans application process
+   */
   protected dailyLoansFormating(dto): any {
     const amount = dto.amount;
     const grantedDate = dto.grantedDate;
@@ -133,6 +140,9 @@ export class LoansService extends ConfigHelperService {
     };
   }
 
+  /**
+   * Format the montly loans application process
+   */
   protected monthlyLoansFormating(dto, category): any {
     const amount = dto.amount;
 
@@ -168,13 +178,68 @@ export class LoansService extends ConfigHelperService {
     };
   }
 
-  protected async processLoans(dto) {
+  /**
+   * Start the loan application process and return any of the loan type
+   * @params dto
+   */
+  protected async processLoans(dto): Promise<any> {
     const category = await this.loanSettingService.getCategoriesById(
       dto.categoryId,
     );
+
     if (category.category_tagline === this.DAILY) {
       return this.dailyLoansFormating(dto);
     }
+
     return this.monthlyLoansFormating(dto, category);
+  }
+
+  public async getAloanForAUSer(user): Promise<Loan> {
+    const loanData = await this.loanRepo
+      .createQueryBuilder('loan')
+      .where('loan.verification_status = :status', {
+        status: VerificationEnums.pending,
+      })
+      .andWhere('loan.customer_id = :customerID', { customerID: user.id })
+      .getOne();
+    return loanData;
+  }
+
+  public async approveLoan(
+    @Body() dto: ApproveLoanDto,
+    @Res() response: Response,
+  ): Promise<any> {
+    let status = false;
+    let statusCode: HttpStatus;
+    let message = '';
+    let responseData = null;
+
+    try {
+      const loan = await this.loanRepo
+        .createQueryBuilder('loan')
+        .where('loan.id = :loanId', { loanId: dto.loan_id })
+        .update({ verification_status: dto.status })
+        .returning('*')
+        .updateEntity(true)
+        .execute();
+      const raw = await loan.raw;
+
+      if (!raw.length) {
+        message = 'Loan does not exists';
+        statusCode = HttpStatus.NOT_FOUND;
+      } else {
+        message = `Loan is ${dto.status}`;
+        status = true;
+        statusCode = HttpStatus.CREATED;
+        responseData = raw[0];
+      }
+    } catch (e) {
+      logErrors(e);
+      message = 'there was an error. please try again';
+      statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
+    }
+    return response
+      .status(statusCode)
+      .send(responseStructure(status, message, responseData, statusCode));
   }
 }

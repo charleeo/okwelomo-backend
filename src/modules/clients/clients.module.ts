@@ -6,7 +6,7 @@ import { KycService } from './kyc/kyc.service';
 import { KYCRepository } from './kyc/repositories/kyc.repository';
 import { Users } from '../user/entities/user.entity';
 import { ValidateField } from './kyc/Validations/ValidateField';
-import { KycMiddleware } from 'src/middleware/kyc/kyc.middleware';
+import { KYCInputVaidtion } from 'src/middleware/kyc/kyc.input.validation.middleware';
 import { ValidateKYCId } from './kyc/Validations/ValidateKYCId';
 import { VerifyKycMiddleware } from 'src/middleware/kyc/verify-kyc/verify-kyc.middleware';
 import { LoanRepository } from './loans/repositories/loan.repository';
@@ -16,6 +16,11 @@ import { LoanSettingController } from './loans/controllers/loan-setting.controll
 import { IsAdminMiddleware } from 'src/middleware/is-admin/is-admin.middleware';
 import { IsNotAdminMiddleware } from 'src/middleware/is-not-admin/is-not-admin.middleware';
 import { LoanCategoryRepository } from '../config/repository/loan.category.repository';
+import { PreventDupplicatesMiddleware } from 'src/middleware/loan/prevent-dupplicates/prevent-dupplicates.middleware';
+import { MustVerifyKycMiddleware } from 'src/middleware/loan/must-verify-kyc/must-verify-kyc.middleware';
+import { KycMustExistsMiddleware } from 'src/middleware/loan/kyc-must-exists/kyc-must-exists.middleware';
+import { ConfigHelperService } from '../config/services/helpers.config';
+import { ConfigMiddlewareHelperService } from '../config/services/helpers.middleware.config';
 
 @Module({
   controllers: [KycController, LoansController, LoanSettingController],
@@ -30,6 +35,8 @@ import { LoanCategoryRepository } from '../config/repository/loan.category.repos
     LoanRepository,
     LoanSettingRepository,
     LoanCategoryRepository,
+    ConfigHelperService,
+    ConfigMiddlewareHelperService,
   ],
   imports: [],
   exports: [LoanSettingRepository],
@@ -37,10 +44,15 @@ import { LoanCategoryRepository } from '../config/repository/loan.category.repos
 export class ClientsModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
-      .apply(KycMiddleware, IsNotAdminMiddleware)
+      .apply(IsNotAdminMiddleware, KYCInputVaidtion)
       .forRoutes({ path: '/kyc/create', method: RequestMethod.POST });
     consumer
-      .apply(IsNotAdminMiddleware)
+      .apply(
+        IsNotAdminMiddleware,
+        KycMustExistsMiddleware,
+        MustVerifyKycMiddleware,
+        PreventDupplicatesMiddleware,
+      )
       .forRoutes(
         { path: 'loan-setting', method: RequestMethod.POST },
         { path: 'loans/apply', method: RequestMethod.POST },

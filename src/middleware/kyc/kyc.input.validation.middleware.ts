@@ -7,10 +7,9 @@ import {
 
 import { Request, Response, NextFunction } from 'express';
 import { responseStructure } from 'src/common/helpers/response.structure';
-import { verifyToken } from 'src/common/helpers/jwt';
 
 @Injectable()
-export class KycMiddleware implements NestMiddleware {
+export class KYCInputVaidtion implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction) {
     let error = false;
     let message = '';

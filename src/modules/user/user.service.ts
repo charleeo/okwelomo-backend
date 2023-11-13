@@ -33,7 +33,6 @@ dotenv.config();
 export class UserService {
   constructor(
     private usersRepository: UserRepository,
-    private userRoelRepo: UserRoleRepository,
     private actionRepo: ActionRepository,
   ) {}
 
@@ -48,6 +47,7 @@ export class UserService {
   findOne(id: number): Promise<Users> {
     return this.usersRepository.findOneBy({ id });
   }
+
   findOneByEmail(email: string): Promise<Users | null> {
     return this.usersRepository.findOneBy({ email });
   }
