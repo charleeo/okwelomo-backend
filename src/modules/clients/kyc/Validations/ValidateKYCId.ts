@@ -20,7 +20,6 @@ export class ValidateKYCId implements ValidatorConstraintInterface {
     if (!entity) {
       return false;
     } else return true;
-    // return !entity;
   };
 
   defaultMessage(args: ValidationArguments) {

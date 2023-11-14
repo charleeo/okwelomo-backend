@@ -42,7 +42,6 @@ export class KycController {
 
   @Get('all')
   async index(@Res() res: Response, @Query() query: any): Promise<any> {
-    console.log('here');
     return await this.kcyService.index(res, query);
   }
 

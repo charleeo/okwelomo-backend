@@ -1,11 +1,9 @@
 import { HttpStatus, Injectable, Res, Body, Request } from '@nestjs/common';
-import { LoanRepository } from '../repositories/loan.repository';
-import { LoanApplicationDto } from '../dto/apply.for.loan.dto';
-import { Users } from 'src/modules/user/entities/user.entity';
+
 import { responseStructure } from 'src/common/helpers/response.structure';
 import { logErrors } from 'src/common/helpers/logging';
 import { Response } from 'express';
-import { LoanSettingService } from './loan.settings.service';
+
 import {
   reference,
   setPaymentCommencementDateDaily,
@@ -14,12 +12,20 @@ import {
   setPaymentDueDateMonthly,
 } from 'src/common/helpers/generals';
 import { ConfigHelperService } from 'src/modules/config/services/helpers.config';
-import { Loan } from '../entities/loan.entity';
-import { VerificationEnums } from 'src/modules/entities/common.type';
-import { ApproveLoanDto } from '../dto/verify.loan.dto';
+
+import {
+  ApprovalStatus,
+  VerificationEnums,
+} from 'src/modules/entities/common.type';
+
+import { LoanSettingService } from '../loan.settings.service';
+import { LoanRepository } from '../../repositories/loan.repository';
+import { LoanApplicationDto } from '../../dto/apply.for.loan.dto';
+import { ApproveLoanDto } from '../../dto/verify.loan.dto';
+import { Loan } from '../../entities/loan.entity';
 
 @Injectable()
-export class LoansService extends ConfigHelperService {
+export class ApplicationService extends ConfigHelperService {
   private readonly DAILY: string;
   private readonly REPAYMENTDURATION: number;
   constructor(
@@ -43,6 +49,17 @@ export class LoansService extends ConfigHelperService {
     const user = await this.getUser(req);
 
     try {
+      const category = await this.loanSettingService.getCategoriesById(
+        dto.categoryId,
+      );
+      if (!category) {
+        statusCode = HttpStatus.BAD_REQUEST;
+        message = ' Invalid loan category Id provided';
+        return response
+          .status(statusCode)
+          .send(responseStructure(status, message, responseData, statusCode));
+      }
+
       const {
         repayment_amount,
         interest,
@@ -50,14 +67,14 @@ export class LoansService extends ConfigHelperService {
         repayment_due_date,
         amount,
         start_date,
-      } = await this.processLoans(dto);
-
+      } = await this.processLoans(dto, category);
+      const repaymentAmount = Number(repayment_amount).toFixed(2);
       responseData = await this.loanRepo.save({
         customer_id: user.id,
         type: dto.categoryId,
         amount: amount,
         interest: interest,
-        repayment_rate: repayment_amount,
+        repayment_rate: parseFloat(repaymentAmount),
         repayment_due_date: repayment_due_date,
         repayment_start_date: repayment_commencement_date,
         issue_date: start_date,
@@ -182,11 +199,7 @@ export class LoansService extends ConfigHelperService {
    * Start the loan application process and return any of the loan type
    * @params dto
    */
-  protected async processLoans(dto): Promise<any> {
-    const category = await this.loanSettingService.getCategoriesById(
-      dto.categoryId,
-    );
-
+  protected async processLoans(dto, category): Promise<any> {
     if (category.category_tagline === this.DAILY) {
       return this.dailyLoansFormating(dto);
     }
@@ -198,7 +211,7 @@ export class LoansService extends ConfigHelperService {
     const loanData = await this.loanRepo
       .createQueryBuilder('loan')
       .where('loan.verification_status = :status', {
-        status: VerificationEnums.pending,
+        status: ApprovalStatus.pending,
       })
       .andWhere('loan.customer_id = :customerID', { customerID: user.id })
       .getOne();

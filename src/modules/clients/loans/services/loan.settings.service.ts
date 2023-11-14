@@ -80,7 +80,8 @@ export class LoanSettingService extends ConfigHelperService {
     });
   }
 
-  /**
+  /*
+   *
    *create a new record if no configuration exists for this user
    * @param req Request
    * @param dto LoanSettingDTO

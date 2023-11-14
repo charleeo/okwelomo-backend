@@ -1,7 +1,7 @@
 import { Module, MiddlewareConsumer, RequestMethod } from '@nestjs/common';
 import { KycController } from './kyc/kyc.controller';
 import { LoansController } from './loans/controllers/loans.controller';
-import { LoansService } from './loans/services/loans.service';
+
 import { KycService } from './kyc/kyc.service';
 import { KYCRepository } from './kyc/repositories/kyc.repository';
 import { Users } from '../user/entities/user.entity';
@@ -22,10 +22,12 @@ import { KycMustExistsMiddleware } from 'src/middleware/loan/kyc-must-exists/kyc
 import { ConfigHelperService } from '../config/services/helpers.config';
 import { ConfigMiddlewareHelperService } from '../config/services/helpers.middleware.config';
 
+import { RepaymentService } from './loans/services/repayment/repayment.service';
+import { ApplicationService } from './loans/services/application/application.service';
+
 @Module({
   controllers: [KycController, LoansController, LoanSettingController],
   providers: [
-    LoansService,
     LoanSettingService,
     KycService,
     KYCRepository,
@@ -37,6 +39,8 @@ import { ConfigMiddlewareHelperService } from '../config/services/helpers.middle
     LoanCategoryRepository,
     ConfigHelperService,
     ConfigMiddlewareHelperService,
+    RepaymentService,
+    ApplicationService,
   ],
   imports: [],
   exports: [LoanSettingRepository],
@@ -51,12 +55,14 @@ export class ClientsModule {
         IsNotAdminMiddleware,
         KycMustExistsMiddleware,
         MustVerifyKycMiddleware,
-        PreventDupplicatesMiddleware,
       )
       .forRoutes(
         { path: 'loan-setting', method: RequestMethod.POST },
         { path: 'loans/apply', method: RequestMethod.POST },
       );
+    // consumer
+    //   .apply(PreventDupplicatesMiddleware)
+    //   .forRoutes({ path: 'loans/apply', method: RequestMethod.POST });
     consumer
       .apply(IsAdminMiddleware)
       .forRoutes(

@@ -18,7 +18,6 @@ export class ValidateNullField implements ValidatorConstraintInterface {
     args: ValidationArguments,
   ): Promise<boolean> => {
     const [entityClass, fieldName] = args.constraints;
-    console.log(args.constraints);
     return true;
   };
 

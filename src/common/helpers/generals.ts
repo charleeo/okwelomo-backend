@@ -75,7 +75,6 @@ export const setPaymentCommencementDateMonthly = (grantedDate, plan?) => {
  * @returns
  */
 export const setPaymentDueDateMonthly = (date, duration) => {
-  console.log(date);
   date = new Date(date);
   return addMonths(date, duration);
 };

@@ -18,7 +18,7 @@ export class LoanRepayment {
   @Generated('uuid')
   uuid: string;
 
-  @Column({ type: 'decimal', default: 0.0 })
+  @Column({ type: 'decimal', default: 0.0, precision: 10, scale: 2 })
   amount: number;
 
   @Column({ type: 'varchar' })
