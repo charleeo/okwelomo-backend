@@ -50,6 +50,7 @@ export class ClientsModule {
     consumer
       .apply(IsNotAdminMiddleware, KYCInputVaidtion)
       .forRoutes({ path: '/kyc/create', method: RequestMethod.POST });
+
     consumer
       .apply(
         IsNotAdminMiddleware,
@@ -60,9 +61,11 @@ export class ClientsModule {
         { path: 'loan-setting', method: RequestMethod.POST },
         { path: 'loans/apply', method: RequestMethod.POST },
       );
-    // consumer
-    //   .apply(PreventDupplicatesMiddleware)
-    //   .forRoutes({ path: 'loans/apply', method: RequestMethod.POST });
+
+    consumer
+      .apply(PreventDupplicatesMiddleware)
+      .forRoutes({ path: 'loans/apply', method: RequestMethod.POST });
+
     consumer
       .apply(IsAdminMiddleware)
       .forRoutes(

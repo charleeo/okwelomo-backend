@@ -52,6 +52,7 @@ export class ApplicationService extends ConfigHelperService {
       const category = await this.loanSettingService.getCategoriesById(
         dto.categoryId,
       );
+
       if (!category) {
         statusCode = HttpStatus.BAD_REQUEST;
         message = ' Invalid loan category Id provided';
@@ -68,7 +69,9 @@ export class ApplicationService extends ConfigHelperService {
         amount,
         start_date,
       } = await this.processLoans(dto, category);
+
       const repaymentAmount = Number(repayment_amount).toFixed(2);
+
       responseData = await this.loanRepo.save({
         customer_id: user.id,
         type: dto.categoryId,
@@ -139,14 +142,20 @@ export class ApplicationService extends ConfigHelperService {
    */
   protected dailyLoansFormating(dto): any {
     const amount = dto.amount;
+
     const grantedDate = dto.grantedDate;
+
     const repaymentCommencementDate: Date =
       setPaymentCommencementDateDaily(grantedDate);
+
     const repaymentAmount: number = this.calCulateDailyRepaymentPlan(amount);
+
     const repaymentDueDate: Date = setPaymentDueDateDaily(
       repaymentCommencementDate,
     );
+
     const interest = this.calculateInterest(amount, 15);
+
     return {
       interest: interest,
       repayment_amount: repaymentAmount,
