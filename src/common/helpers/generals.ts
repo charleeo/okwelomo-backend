@@ -100,5 +100,5 @@ function addWeeks(date: Date, weeks = 1) {
 export function reference(): string {
   const date = new Date();
   const time = date.setTime(date.getTime()).toString();
-  return time;
+  return `APP_CODE_${time}`;
 }

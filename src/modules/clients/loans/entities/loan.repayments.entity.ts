@@ -27,9 +27,6 @@ export class LoanRepayment {
   @Column({ type: 'jsonb', default: {} })
   repayments_data: object;
 
-  @Column({ type: 'date', default: null })
-  next_repayment_date: Date;
-
   @CreateDateColumn()
   created_at: Date;
   @UpdateDateColumn()

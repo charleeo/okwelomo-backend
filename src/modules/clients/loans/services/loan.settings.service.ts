@@ -74,7 +74,7 @@ export class LoanSettingService extends ConfigHelperService {
   /**
    *
    * @param client_id
-   * @returns LoanSetting
+   * @returns @LoanSetting
    */
   async findOne(client_id): Promise<LoanSetting> {
     return await this.loanSettingRepo.findOne({
@@ -109,23 +109,9 @@ export class LoanSettingService extends ConfigHelperService {
   }
 
   async getLoanTypeById(key: string | number) {
-    const typeOfKey = typeof key;
-    const query = null;
-
-    // if (typeOfKey === 'number') {
-    //   (query = 'id = :loanId'), { loanId: key };
-    // } else if (typeOfKey === 'string') {
-    //   query = ('type = :loanType', { loanId: key });
-    // }
-    // console.log(query);
     return await this.loanTypeRepo
-      // .createQueryBuilder()
-      // .where(query)
-      // .orWhere(query)
-      // .getOne();
       .createQueryBuilder()
       .where('id = :loanId', { loanId: key })
-      // .orWhere('type = :loanType', { loanType: key })
       .getOne();
   }
 }

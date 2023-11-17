@@ -8,14 +8,24 @@ import { responseStructure } from 'src/common/helpers/response.structure';
 import { logErrors } from 'src/common/helpers/logging';
 import { Loan } from '../../entities/loan.entity';
 import { LoanRepayment } from '../../entities/loan.repayments.entity';
+import { LoanType } from 'src/modules/config/entities/loan.type.entity';
 
 @Injectable()
 export class RepaymentService {
+  private readonly DAILY: string;
+  private readonly MONTHLY: string;
+  private readonly WEEKLY: string;
+  private readonly YEARLY: string;
   constructor(
     private readonly loanRepo: LoanRepository,
     private readonly loanRepaymentRepo: LoanRepaymentRepository,
     private readonly loanSettingService: LoanSettingService,
-  ) {}
+  ) {
+    this.DAILY = 'daily';
+    this.MONTHLY = 'monthly';
+    this.WEEKLY = 'weekly';
+    this.YEARLY = 'yearly';
+  }
 
   /**
    * process loan repayment
@@ -27,32 +37,43 @@ export class RepaymentService {
     @Body() dto: LoanRepaymentDto,
     @Res() response: Response,
   ) {
-    const status = false;
+    let status = false;
     let statusCode: HttpStatus;
     let message = '';
-    const responseData = null;
+    let responseData = null;
     try {
       const reference = dto.reference_number;
       const repayment_amount = dto.repayment_amount;
       const loan: Loan = await this.loanRepo.findOneBy({ reference });
 
       if (loan) {
-        const category =
-          await this.loanSettingService.getRepaymentDurationCategoriesById(
-            loan.loan_type,
-          );
+        const loanType = await this.loanSettingService.getLoanTypeById(
+          loan.loan_type,
+        );
 
-        const loanRepaymentAmount = loan.repayment_rate;
-        const repayment_intervals = loan.repayment_intervals;
-        const amount = loan.amount;
-        const repaymentFormat = {};
-        const loanRepayment = await this.loanRepaymentRepo.findOneBy({
+        const repaymentObject = await this.setRepaymentObject(
+          loan,
+          loanType,
+          repayment_amount,
+        );
+        const payment = await this.loanRepaymentRepo.save({
+          amount: repayment_amount,
+          repayments_data: repaymentObject,
           reference,
         });
-        // const data = loanRepayment.repayments_data;
-        this.dailyLoanRepayment(loan, dto, loanRepayment);
 
-        statusCode = HttpStatus.CREATED;
+        if (payment) {
+          await this.updateLoanEntity(loan, {
+            repayment_sum: repaymentObject.amount,
+          });
+
+          statusCode = HttpStatus.CREATED;
+          status = true;
+          message = 'Loan repayment data saved';
+        } else {
+          message = 'Loan repayment data not saved';
+        }
+        responseData = payment;
       } else {
         statusCode = HttpStatus.BAD_REQUEST;
         message = ' Invalid loan  reference provided';
@@ -67,36 +88,66 @@ export class RepaymentService {
       .send(responseStructure(status, message, responseData, statusCode));
   }
 
-  private createRepayent(details: any, repayment?: LoanRepayment) {}
+  /**
+   *
+   * @param reference
+   * @returns
+   */
+  public async getLoansByRefernce(reference): Promise<LoanRepayment[]> {
+    const repayments = await this.loanRepaymentRepo
+      .createQueryBuilder('repayment')
+      .where('repayment.reference = :referenceNo', { referenceNo: reference })
+      .getMany();
+    return repayments;
+  }
 
-  private updateRepayent(repayment: LoanRepayment) {}
-
-  private dailyLoanRepayment(
-    loan: Loan,
-    dto: LoanRepaymentDto,
-    repayment?: LoanRepayment,
-  ): any {
-    const repayment_intervals = loan.repayment_intervals;
-    const repayment_amount = loan.repayment_rate;
-    const amount = dto.repayment_amount;
-    const repaymentFormat = {};
-    let totalRepaymentValues = Math.ceil(amount / repayment_amount);
-
-    if (repayment) {
-      const dailyPayment = repayment.repayments_data['daily'];
-      const totalPaymentRecords = dailyPayment.length;
-      totalRepaymentValues = +totalPaymentRecords;
+  /**
+   *
+   * @param loan
+   * @param loanTYpe
+   * @param amount
+   * @returns
+   */
+  private async setRepaymentObject(loan: Loan, loanTYpe: LoanType, amount) {
+    const repaymentDataCount = await this.getLoansByRefernce(loan.reference);
+    let sum_of_payments = 0;
+    if (repaymentDataCount) {
+      repaymentDataCount.map((payment) => {
+        sum_of_payments += payment.amount + amount;
+      });
     }
 
-    for (let i = 1; i <= totalRepaymentValues; i++) {
-      repaymentFormat[`day_${i}`] = amount;
-      repaymentFormat[`date_${i}`] = new Date();
-    }
-    const repaymentObject = {
-      daily: {
-        ...repaymentFormat,
-      },
+    const repaymentObect = {
+      amount,
+      sum_of_payments,
+      payment_date: new Date(),
     };
-    console.log(repaymentObject);
+
+    if (loanTYpe.type === this.DAILY) {
+      repaymentObect['type'] = this.DAILY;
+    }
+    if (loanTYpe.type === this.MONTHLY) {
+      repaymentObect['type'] = this.MONTHLY;
+    }
+
+    if (loanTYpe.type === this.WEEKLY) {
+      repaymentObect['type'] = this.WEEKLY;
+    }
+    if (loanTYpe.type === this.YEARLY) {
+      repaymentObect['type'] = this.YEARLY;
+    }
+    return repaymentObect;
+  }
+
+  /**
+   *
+   * @param loan
+   * @param object
+   */
+  private async updateLoanEntity(loan: Loan, object: Partial<Loan>) {
+    await this.loanRepo
+      .createQueryBuilder()
+      .where('id = :loanId', { loanId: loan.id })
+      .update(object);
   }
 }
