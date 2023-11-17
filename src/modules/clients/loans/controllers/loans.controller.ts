@@ -5,10 +5,6 @@ import {
   Request as NestRequest,
   UseGuards,
   Res,
-  Get,
-  Query,
-  Param,
-  Delete,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { LoanApplicationDto } from '../dto/apply.for.loan.dto';

@@ -15,7 +15,7 @@ import { LoanSettingService } from './loans/services/loan.settings.service';
 import { LoanSettingController } from './loans/controllers/loan-setting.controller';
 import { IsAdminMiddleware } from 'src/middleware/is-admin/is-admin.middleware';
 import { IsNotAdminMiddleware } from 'src/middleware/is-not-admin/is-not-admin.middleware';
-import { LoanCategoryRepository } from '../config/repository/loan.category.repository';
+import { LoanRepaymentDurationCategoryRepository } from '../config/repository/loan.repayment.duration.category.repository';
 import { PreventDupplicatesMiddleware } from 'src/middleware/loan/prevent-dupplicates/prevent-dupplicates.middleware';
 import { MustVerifyKycMiddleware } from 'src/middleware/loan/must-verify-kyc/must-verify-kyc.middleware';
 import { KycMustExistsMiddleware } from 'src/middleware/loan/kyc-must-exists/kyc-must-exists.middleware';
@@ -24,9 +24,17 @@ import { ConfigMiddlewareHelperService } from '../config/services/helpers.middle
 
 import { RepaymentService } from './loans/services/repayment/repayment.service';
 import { ApplicationService } from './loans/services/application/application.service';
+import { LoanRepaymentRepository } from './loans/repositories/loan.repayment.repository';
+import { RepaymentController } from './loans/controllers/repayment/repayment.controller';
+import { LoanTypeRepository } from '../config/repository/loan.type.repository';
 
 @Module({
-  controllers: [KycController, LoansController, LoanSettingController],
+  controllers: [
+    KycController,
+    LoansController,
+    LoanSettingController,
+    RepaymentController,
+  ],
   providers: [
     LoanSettingService,
     KycService,
@@ -36,14 +44,16 @@ import { ApplicationService } from './loans/services/application/application.ser
     ValidateKYCId,
     LoanRepository,
     LoanSettingRepository,
-    LoanCategoryRepository,
+    LoanRepaymentDurationCategoryRepository,
     ConfigHelperService,
     ConfigMiddlewareHelperService,
     RepaymentService,
     ApplicationService,
+    LoanRepaymentRepository,
+    LoanTypeRepository,
   ],
   imports: [],
-  exports: [LoanSettingRepository],
+  exports: [LoanSettingRepository, LoanTypeRepository],
 })
 export class ClientsModule {
   configure(consumer: MiddlewareConsumer) {

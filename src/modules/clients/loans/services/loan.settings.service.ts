@@ -7,13 +7,15 @@ import { LoanSettingRepository } from '../repositories/loan.setting.repository';
 import { LoanSettingDTO } from '../dto/loan.setting.dto';
 import { LoanSetting } from '../entities/loan.settings.entity';
 import { ConfigHelperService } from 'src/modules/config/services/helpers.config';
-import { LoanCategoryRepository } from 'src/modules/config/repository/loan.category.repository';
+import { LoanRepaymentDurationCategoryRepository } from 'src/modules/config/repository/loan.repayment.duration.category.repository';
+import { LoanTypeRepository } from 'src/modules/config/repository/loan.type.repository';
 
 @Injectable()
 export class LoanSettingService extends ConfigHelperService {
   constructor(
     private loanSettingRepo: LoanSettingRepository,
-    private readonly loanCatRep: LoanCategoryRepository,
+    private readonly loanRepaymentDurationRepo: LoanRepaymentDurationCategoryRepository,
+    private readonly loanTypeRepo: LoanTypeRepository,
   ) {
     super();
   }
@@ -102,7 +104,28 @@ export class LoanSettingService extends ConfigHelperService {
     return await this.findOne(user.id);
   }
 
-  async getCategoriesById(id) {
-    return await this.loanCatRep.findOne({ where: { id } });
+  async getRepaymentDurationCategoriesById(id) {
+    return await this.loanRepaymentDurationRepo.findOne({ where: { id } });
+  }
+
+  async getLoanTypeById(key: string | number) {
+    const typeOfKey = typeof key;
+    const query = null;
+
+    // if (typeOfKey === 'number') {
+    //   (query = 'id = :loanId'), { loanId: key };
+    // } else if (typeOfKey === 'string') {
+    //   query = ('type = :loanType', { loanId: key });
+    // }
+    // console.log(query);
+    return await this.loanTypeRepo
+      // .createQueryBuilder()
+      // .where(query)
+      // .orWhere(query)
+      // .getOne();
+      .createQueryBuilder()
+      .where('id = :loanId', { loanId: key })
+      // .orWhere('type = :loanType', { loanType: key })
+      .getOne();
   }
 }

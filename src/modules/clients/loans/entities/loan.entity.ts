@@ -1,4 +1,7 @@
-import { ApprovalStatus } from 'src/modules/entities/common.type';
+import {
+  ApprovalStatus,
+  InterestPaymentStatus,
+} from 'src/modules/entities/common.type';
 
 import {
   Entity,
@@ -9,7 +12,7 @@ import {
   Generated,
 } from 'typeorm';
 
-@Entity()
+@Entity({ name: 'loans' })
 export class Loan {
   @PrimaryGeneratedColumn({ unsigned: true })
   id: number;
@@ -19,7 +22,10 @@ export class Loan {
   uuid: string;
 
   @Column({ type: 'int' })
-  type: number;
+  loan_duration_category: number;
+
+  @Column({ type: 'int' })
+  loan_type: number;
 
   @Column({ type: 'int' })
   customer_id: number;
@@ -33,8 +39,20 @@ export class Loan {
   @Column({ type: 'decimal', default: 0.0, precision: 10, scale: 2 })
   repayment_sum: number;
 
+  @Column({
+    type: 'decimal',
+    default: 0.0,
+    precision: 10,
+    scale: 2,
+    comment: 'the loaned amount plus the loan interest',
+  })
+  expected_repayment_amount: number;
+
   @Column({ type: 'varchar', default: 0 })
   repayment_rate: number;
+
+  @Column({ type: 'varchar', default: 0 })
+  repayment_intervals: number;
 
   @Column({ type: 'date', default: null })
   repayment_due_date: Date;
@@ -42,7 +60,7 @@ export class Loan {
   @Column({ type: 'date', default: null })
   repayment_start_date: Date;
 
-  @Column({ type: 'date', default: new Date() })
+  @Column({ type: 'date', default: null })
   issue_date: Date;
 
   @Column({ type: 'varchar' })
@@ -54,6 +72,13 @@ export class Loan {
     enum: ApprovalStatus,
   })
   verification_status: ApprovalStatus;
+
+  @Column({
+    type: 'enum',
+    default: InterestPaymentStatus.paid_upfront,
+    enum: InterestPaymentStatus,
+  })
+  interest_payment_status: InterestPaymentStatus;
 
   @CreateDateColumn()
   created_at: Date;

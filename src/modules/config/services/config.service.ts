@@ -8,6 +8,7 @@ import adminUsers from '../../../storage/data/super_tech_admin.json';
 import actions from '../../../storage/data/actions.json';
 import locations from '../../../storage/data/locations.json';
 import duties from '../../../storage/data/duties.json';
+import loanTypes from '../../../storage/data/loan.types.json';
 
 import { Roles } from '../entities/roles.entity';
 import { UserRoleRepository } from '../repository/user_roles.repository';
@@ -25,7 +26,8 @@ import { UserRepository } from '../../user/user.repository';
 import { Duties } from '../entities/duties.entity';
 import * as bcrypt from 'bcrypt';
 import { instanceToPlain } from 'class-transformer';
-import { LoanCategoryRepository } from '../repository/loan.category.repository';
+import { LoanRepaymentDurationCategoryRepository } from '../repository/loan.repayment.duration.category.repository';
+import { LoanTypeRepository } from '../repository/loan.type.repository';
 
 @Injectable()
 export class ConfigService {
@@ -36,7 +38,8 @@ export class ConfigService {
     private readonly userRoleRepo: UserRoleRepository,
     private readonly locationRepo: LocationRepository,
     private readonly userRepo: UserRepository,
-    private readonly loanCategory: LoanCategoryRepository,
+    private readonly loanCategory: LoanRepaymentDurationCategoryRepository,
+    private readonly loanType: LoanTypeRepository,
   ) {}
 
   async create(): Promise<any> {
@@ -61,6 +64,18 @@ export class ConfigService {
         responseData['actions'] = 'Actions created';
       });
 
+      loanTypes.map((type) => {
+        this.loanType.upsert(
+          {
+            type: type.type,
+            description: type.description,
+            status: type.status,
+          },
+          ['type'],
+        );
+        responseData['loan_types'] = 'Loan Types created';
+      });
+
       locations.map((location) => {
         this.locationRepo.upsert({ locationName: location.name }, [
           'locationName',
@@ -69,12 +84,8 @@ export class ConfigService {
       });
 
       //constructing the loan category object instead of manually creating it
-      const categoryObjects = [
-        {
-          categoryName: 'Daily Repayment',
-          categoryTag: 'daily',
-        },
-      ];
+      const categoryObjects = [];
+
       for (let i = 1; i < 13; i++) {
         categoryObjects.push({
           categoryName: `${i} Month${i === 1 ? '' : 's'} Repayment`,

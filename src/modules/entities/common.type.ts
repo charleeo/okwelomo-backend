@@ -42,3 +42,8 @@ export enum userCategory {
   admin = 'is_admin',
   user = 'is_user',
 }
+
+export enum InterestPaymentStatus {
+  paid_upfront = 'paid',
+  not_paid_upfront = 'not_paid',
+}

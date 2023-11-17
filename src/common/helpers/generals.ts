@@ -62,10 +62,19 @@ export const setPaymentDueDateDaily = (commencementDate) => {
  * @param duration how many months the loan will span
  * @returns
  */
-export const setPaymentCommencementDateMonthly = (grantedDate, plan?) => {
+export const setPaymentCommencementDateMonthly = (grantedDate, months = 1) => {
   const date = new Date(grantedDate);
-  plan -= 1;
-  return addMonths(date, plan);
+  return addMonths(date, months);
+};
+/**
+ * set the date the loan repayment will commence
+ * @param grantedDate the date loan was given
+ * @param duration how many months the loan will span
+ * @returns
+ */
+export const setPaymentCommencementDateWekly = (grantedDate, weeks = 1) => {
+  const date = new Date(grantedDate);
+  return addWeeks(date, weeks);
 };
 
 /**
@@ -74,13 +83,17 @@ export const setPaymentCommencementDateMonthly = (grantedDate, plan?) => {
  * @param duration how many months the loan will span
  * @returns
  */
-export const setPaymentDueDateMonthly = (date, duration) => {
+export const setPaymentDueDateForNonDaily = (date, duration) => {
   date = new Date(date);
   return addMonths(date, duration);
 };
 
 function addMonths(date, months) {
   date.setMonth(date.getMonth() + months);
+  return date;
+}
+function addWeeks(date: Date, weeks = 1) {
+  date.setTime(date.getTime() + weeks);
   return date;
 }
 

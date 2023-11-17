@@ -14,8 +14,9 @@ import { AuthMiddleware } from 'src/middleware/auth/auth.middleware';
 import { LocationRepository } from './repository/locations.repository';
 
 import { UserRepository } from '../user/user.repository';
-import { LoanCategoryRepository } from './repository/loan.category.repository';
+import { LoanRepaymentDurationCategoryRepository } from './repository/loan.repayment.duration.category.repository';
 import { ConfigService } from './services/config.service';
+import { LoanTypeRepository } from './repository/loan.type.repository';
 
 @Module({
   providers: [
@@ -25,8 +26,9 @@ import { ConfigService } from './services/config.service';
     UserRoleRepository,
     LocationRepository,
     UserRepository,
-    LoanCategoryRepository,
+    LoanRepaymentDurationCategoryRepository,
     ConfigService,
+    LoanTypeRepository,
   ],
   controllers: [ConfigController],
   exports: [
@@ -35,7 +37,7 @@ import { ConfigService } from './services/config.service';
     DutyRepository,
     UserRoleRepository,
     LocationRepository,
-    LoanCategoryRepository,
+    LoanRepaymentDurationCategoryRepository,
     ConfigService,
   ],
 })

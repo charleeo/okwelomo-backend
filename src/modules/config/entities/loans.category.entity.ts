@@ -10,8 +10,8 @@ import {
   Generated,
 } from 'typeorm';
 
-@Entity()
-export class LoanCategory {
+@Entity({ name: 'loan_repayment_duration_categoriess' })
+export class LoanRepaymentDurationCategory {
   @PrimaryGeneratedColumn({ type: 'int', unsigned: true })
   id: number;
 

@@ -1,4 +1,11 @@
-import { IsNotEmpty, IsNumber, IsArray, IsOptional } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsNumber,
+  IsArray,
+  IsOptional,
+  IsEnum,
+} from 'class-validator';
+import { InterestPaymentStatus } from 'src/modules/entities/common.type';
 
 export class LoanApplicationDto {
   @IsNotEmpty()
@@ -11,9 +18,12 @@ export class LoanApplicationDto {
 
   @IsNotEmpty()
   @IsNumber()
-  public categoryId: number;
+  public loan_durtion_category_id: number;
 
-  @IsOptional()
-  @IsNumber()
-  public repaymentDuration: number;
+  @IsNotEmpty()
+  public loan_type: number | string | any;
+
+  @IsNotEmpty()
+  @IsEnum(InterestPaymentStatus)
+  public interest_payment_status: InterestPaymentStatus;
 }
