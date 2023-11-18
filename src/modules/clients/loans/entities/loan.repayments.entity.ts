@@ -24,6 +24,12 @@ export class LoanRepayment {
   @Column({ type: 'varchar' })
   reference: string;
 
+  @Column({ type: 'varchar', nullable: true })
+  repayment_reference: string;
+
+  @Column({ type: 'bool', default: false })
+  confirmation_status: boolean;
+
   @Column({ type: 'jsonb', default: {} })
   repayments_data: object;
 

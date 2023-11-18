@@ -9,6 +9,8 @@ import { logErrors } from 'src/common/helpers/logging';
 import { Loan } from '../../entities/loan.entity';
 import { LoanRepayment } from '../../entities/loan.repayments.entity';
 import { LoanType } from 'src/modules/config/entities/loan.type.entity';
+import { generateReference } from 'src/common/helpers/generals';
+import { LoanRepaymentConfirmationDto } from '../../dto/repayment.confirmation.dto';
 
 @Injectable()
 export class RepaymentService {
@@ -16,6 +18,7 @@ export class RepaymentService {
   private readonly MONTHLY: string;
   private readonly WEEKLY: string;
   private readonly YEARLY: string;
+  private readonly CODE: string;
   constructor(
     private readonly loanRepo: LoanRepository,
     private readonly loanRepaymentRepo: LoanRepaymentRepository,
@@ -25,6 +28,7 @@ export class RepaymentService {
     this.MONTHLY = 'monthly';
     this.WEEKLY = 'weekly';
     this.YEARLY = 'yearly';
+    this.CODE = 'RPM_CODE_';
   }
 
   /**
@@ -44,29 +48,27 @@ export class RepaymentService {
     try {
       const reference = dto.reference_number;
       const repayment_amount = dto.repayment_amount;
-      const loan: Loan = await this.loanRepo.findOneBy({ reference });
-
+      const loan = await this.loan(reference);
       if (loan) {
         const loanType = await this.loanSettingService.getLoanTypeById(
           loan.loan_type,
         );
 
+        //repayment data
         const repaymentObject = await this.setRepaymentObject(
           loan,
           loanType,
           repayment_amount,
         );
+
         const payment = await this.loanRepaymentRepo.save({
           amount: repayment_amount,
           repayments_data: repaymentObject,
           reference,
+          repayment_reference: generateReference(this.CODE),
         });
 
         if (payment) {
-          await this.updateLoanEntity(loan, {
-            repayment_sum: repaymentObject.amount,
-          });
-
           statusCode = HttpStatus.CREATED;
           status = true;
           message = 'Loan repayment data saved';
@@ -113,10 +115,12 @@ export class RepaymentService {
     let sum_of_payments = 0;
     if (repaymentDataCount) {
       repaymentDataCount.map((payment) => {
-        sum_of_payments += payment.amount + amount;
+        const totalAmount = Number(payment.amount).toFixed(2);
+        sum_of_payments = sum_of_payments + parseFloat(totalAmount);
       });
     }
 
+    sum_of_payments = sum_of_payments + amount;
     const repaymentObect = {
       amount,
       sum_of_payments,
@@ -144,10 +148,79 @@ export class RepaymentService {
    * @param loan
    * @param object
    */
-  private async updateLoanEntity(loan: Loan, object: Partial<Loan>) {
-    await this.loanRepo
-      .createQueryBuilder()
-      .where('id = :loanId', { loanId: loan.id })
-      .update(object);
+  private async updateLoanEntity(loan, repayment) {
+    let repayment_sum: number = loan.repayment_sum;
+
+    repayment_sum =
+      parseFloat(Number(repayment.amount).toFixed(2)) +
+      parseFloat(Number(repayment_sum).toFixed(2));
+
+    const repayment_percentage =
+      Number((repayment_sum / loan.expected_repayment_amount) * 100).toFixed(
+        2,
+      ) + '%';
+
+    await this.loanRepo.update(
+      { id: loan.id },
+      { repayment_sum, repayment_percentage },
+    );
+  }
+
+  public async confirmRepayment(
+    @Body() dto: LoanRepaymentConfirmationDto,
+    @Res() response: Response,
+  ) {
+    let status = false;
+    let statusCode: HttpStatus;
+    let message = '';
+    let responseData = null;
+    try {
+      const repayment_reference = dto.reference_number;
+      const confirmation_status = dto.confirmation_status;
+
+      const repaymentData = await this.repayment(repayment_reference);
+
+      if (repaymentData) {
+        const loan = await this.loan(repaymentData.reference);
+
+        //check for the status selected if it true, then update the records
+        if (confirmation_status) {
+          await this.loanRepaymentRepo.update(
+            { repayment_reference },
+            { confirmation_status },
+          );
+
+          //update the loan data if this is called for the reference the first time
+          if (!repaymentData.confirmation_status) {
+            this.updateLoanEntity(loan, repaymentData);
+          }
+
+          statusCode = HttpStatus.CREATED;
+          status = true;
+          message = 'Loan repayment data updated';
+        } else {
+          message = 'Loan repayment data not updated';
+        }
+        responseData = repaymentData;
+      } else {
+        statusCode = HttpStatus.BAD_REQUEST;
+        message = ' Invalid loan  reference provided';
+      }
+    } catch (e) {
+      logErrors(e);
+      message = 'there was an error. please try again';
+      statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
+    }
+
+    return response
+      .status(statusCode)
+      .send(responseStructure(status, message, responseData, statusCode));
+  }
+
+  private async loan(reference): Promise<Loan> {
+    return await this.loanRepo.findOneBy({ reference });
+  }
+  private async repayment(repayment_reference): Promise<LoanRepayment> {
+    return await this.loanRepaymentRepo.findOneBy({ repayment_reference });
   }
 }

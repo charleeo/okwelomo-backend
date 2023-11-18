@@ -5,7 +5,7 @@ import { logErrors } from 'src/common/helpers/logging';
 import { Response } from 'express';
 
 import {
-  reference,
+  generateReference,
   setPaymentCommencementDateDaily,
   setPaymentCommencementDateMonthly,
   setPaymentCommencementDateWekly,
@@ -14,10 +14,7 @@ import {
 } from 'src/common/helpers/generals';
 import { ConfigHelperService } from 'src/modules/config/services/helpers.config';
 
-import {
-  ApprovalStatus,
-  InterestPaymentStatus,
-} from 'src/modules/entities/common.type';
+import { InterestPaymentStatus } from 'src/modules/entities/common.type';
 
 import { LoanSettingService } from '../loan.settings.service';
 import { LoanRepository } from '../../repositories/loan.repository';
@@ -119,7 +116,7 @@ export class ApplicationService extends ConfigHelperService {
         repayment_intervals: repayment_counts,
         loan_duration_category: dto.loan_durtion_category_id,
         expected_repayment_amount: loanRepaymentTotal,
-        reference: reference(),
+        reference: generateReference(),
       });
 
       if (responseData) {
@@ -340,16 +337,6 @@ export class ApplicationService extends ConfigHelperService {
    * @param user
    * @returns
    */
-  public async getAloanForAUSer(user): Promise<Loan> {
-    const loanData = await this.loanRepo
-      .createQueryBuilder('loan')
-      .where('loan.verification_status = :status', {
-        status: ApprovalStatus.pending,
-      })
-      .andWhere('loan.customer_id = :customerID', { customerID: user.id })
-      .getOne();
-    return loanData;
-  }
 
   /**
    * approve a new loan request and returns the details
@@ -425,5 +412,4 @@ export class ApplicationService extends ConfigHelperService {
     }
     return { object: repaymentObject, amount: repaymentAmount };
   }
-
 }

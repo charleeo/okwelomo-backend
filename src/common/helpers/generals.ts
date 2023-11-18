@@ -97,8 +97,9 @@ function addWeeks(date: Date, weeks = 1) {
   return date;
 }
 
-export function reference(): string {
+export function generateReference(code?: string): string {
   const date = new Date();
   const time = date.setTime(date.getTime()).toString();
-  return `APP_CODE_${time}`;
+
+  return `${code ?? 'APP_CODE_'}${time}`;
 }

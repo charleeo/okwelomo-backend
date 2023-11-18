@@ -27,6 +27,7 @@ import { ApplicationService } from './loans/services/application/application.ser
 import { LoanRepaymentRepository } from './loans/repositories/loan.repayment.repository';
 import { RepaymentController } from './loans/controllers/repayment/repayment.controller';
 import { LoanTypeRepository } from '../config/repository/loan.type.repository';
+import { LoanDataService } from './loans/services/loan-data/loan-data.service';
 
 @Module({
   controllers: [
@@ -51,6 +52,7 @@ import { LoanTypeRepository } from '../config/repository/loan.type.repository';
     ApplicationService,
     LoanRepaymentRepository,
     LoanTypeRepository,
+    LoanDataService,
   ],
   imports: [],
   exports: [LoanSettingRepository, LoanTypeRepository],

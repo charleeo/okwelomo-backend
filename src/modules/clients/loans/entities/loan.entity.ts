@@ -51,6 +51,9 @@ export class Loan {
   @Column({ type: 'varchar', default: 0 })
   repayment_rate: number;
 
+  @Column({ type: 'varchar', default: '0%' })
+  repayment_percentage: string;
+
   @Column({ type: 'varchar', default: 0 })
   repayment_intervals: number;
 
