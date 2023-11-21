@@ -1,6 +1,8 @@
 export const SUNDAY = 'Sunday';
 export const SATURDAY = 'Saturday';
 export const FRIDAY = 'Friday';
+import fs from 'fs/promises';
+import path, { sep } from 'path';
 export function day() {
   return [
     'Sunday',
@@ -102,4 +104,38 @@ export function generateReference(code?: string): string {
   const time = date.setTime(date.getTime()).toString();
 
   return `${code ?? 'APP_CODE_'}${time}`;
+}
+
+export function Classes(bases) {
+  class Bases {
+    constructor() {
+      bases.forEach((base) => Object.assign(this, new base()));
+    }
+  }
+  bases.forEach((base) => {
+    Object.getOwnPropertyNames(base.prototype)
+      .filter((prop) => prop !== 'contructor')
+      .forEach((prop) => (Bases.prototype[prop] = base.prototype[prop]));
+  });
+  return Bases;
+}
+
+/**
+ * this will return a string message corresponding to the code pass to it
+@param {} code the response code to passed
+* @returns {string}
+*/
+export async function setExceptionFilters(exception) {
+  let message = '';
+  let exceptions = await fs.readFile(
+    path.join(`.${sep}src${sep}storage${sep}data${sep}exceptions.json`),
+    'utf-8',
+  );
+  exceptions = JSON.parse(exceptions);
+  console.log(exceptions.hasOwnProperty(exception));
+
+  if (exceptions.hasOwnProperty(exception)) {
+    message = exceptions[exception];
+  }
+  return message;
 }

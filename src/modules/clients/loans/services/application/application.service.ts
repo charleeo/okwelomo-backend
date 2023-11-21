@@ -12,9 +12,11 @@ import {
   setPaymentDueDateDaily,
   setPaymentDueDateForNonDaily,
 } from 'src/common/helpers/generals';
-import { ConfigHelperService } from 'src/modules/config/services/helpers.config';
 
-import { InterestPaymentStatus } from 'src/modules/entities/common.type';
+import {
+  DaysAndWeekAndMonths,
+  InterestPaymentStatus,
+} from 'src/modules/entities/common.type';
 
 import { LoanSettingService } from '../loan.settings.service';
 import { LoanRepository } from '../../repositories/loan.repository';
@@ -23,21 +25,15 @@ import { ApproveLoanDto } from '../../dto/verify.loan.dto';
 import { Loan } from '../../entities/loan.entity';
 import { LoanRepaymentDurationCategory } from 'src/modules/config/entities/loans.category.entity';
 import { LoanType } from 'src/modules/config/entities/loan.type.entity';
+import { BaseDataSource } from 'src/common/helpers/base.data.ource';
 
 @Injectable()
-export class ApplicationService extends ConfigHelperService {
-  private readonly DAILY: string;
-  private readonly MONTHLY: string;
-  private readonly WEEKLY: string;
-
+export class ApplicationService extends BaseDataSource {
   constructor(
     private readonly loanRepo: LoanRepository,
     private readonly loanSettingService: LoanSettingService,
   ) {
-    super();
-    this.DAILY = 'daily';
-    this.MONTHLY = 'monthly';
-    this.WEEKLY = 'weekly';
+    super(loanRepo);
   }
 
   /**
@@ -58,77 +54,65 @@ export class ApplicationService extends ConfigHelperService {
     let responseData = null;
     const user = await this.getUser(req);
 
-    try {
-      const loanType = await this.loanSettingService.getLoanTypeById(
-        dto.loan_type,
-      );
-      const repaymenDurationtPlan =
-        await this.loanSettingService.getRepaymentDurationCategoriesById(
-          dto.loan_durtion_category_id,
-        );
+    const loanType = await this.loanSettingService.getLoanTypeById(
+      dto.loan_type,
+    );
 
-      if (!loanType || !repaymenDurationtPlan) {
-        statusCode = HttpStatus.BAD_REQUEST;
-        message = ' Invalid data provided';
-        return response
-          .status(statusCode)
-          .send(responseStructure(status, message, responseData, statusCode));
-      }
-
-      const {
-        repayment_amount,
-        interest,
-        repayment_commencement_date,
-        repayment_due_date,
-        amount,
-        start_date,
-      } = await this.processLoans(dto, loanType, repaymenDurationtPlan);
-
-      let repaymentAmount = Number(repayment_amount).toFixed(2);
-
-      const repayment_counts = this.repaymentCount(
-        loanType,
-        repaymenDurationtPlan,
+    const repaymenDurationtPlan =
+      await this.loanSettingService.getRepaymentDurationCategoriesById(
+        dto.loan_durtion_category_id,
       );
 
-      const interestPaymentCheck = this.checInterestUpfrontPayment(
-        dto,
-        amount,
-        interest,
-        repayment_counts,
-        repaymentAmount,
-      );
-      const repaymentObject = interestPaymentCheck.object;
-      repaymentAmount = interestPaymentCheck.amount;
-      const loanRepaymentTotal = amount + interest;
+    const {
+      repayment_amount,
+      interest,
+      repayment_commencement_date,
+      repayment_due_date,
+      amount,
+      start_date,
+    } = await this.processLoans(dto, loanType, repaymenDurationtPlan);
 
-      //Save the loan information to database and return the response
-      responseData = await this.loanRepo.save({
-        ...repaymentObject,
-        customer_id: user.id,
-        loan_type: dto.loan_type,
-        amount: amount,
-        interest: interest,
-        repayment_rate: parseFloat(repaymentAmount),
-        repayment_due_date: repayment_due_date,
-        repayment_start_date: repayment_commencement_date,
-        issue_date: start_date,
-        repayment_intervals: repayment_counts,
-        loan_duration_category: dto.loan_durtion_category_id,
-        expected_repayment_amount: loanRepaymentTotal,
-        reference: generateReference(),
-      });
+    let repaymentAmount = Number(repayment_amount).toFixed(2);
 
-      if (responseData) {
-        message = 'Data creted';
-        status = true;
-        statusCode = HttpStatus.CREATED;
-      }
-    } catch (e) {
-      logErrors(e);
-      message = 'there was an error. please try again';
-      statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
+    const repayment_counts = this.repaymentCount(
+      loanType,
+      repaymenDurationtPlan,
+    );
+
+    const interestPaymentCheck = this.checInterestUpfrontPayment(
+      dto,
+      amount,
+      interest,
+      repayment_counts,
+      repaymentAmount,
+    );
+    const repaymentObject = interestPaymentCheck.object;
+    repaymentAmount = interestPaymentCheck.amount;
+    const loanRepaymentTotal = amount + interest;
+
+    //Save the loan information to database and return the response
+    responseData = await this.loanRepo.save({
+      ...repaymentObject,
+      customer_id: user.id,
+      loan_type: dto.loan_type,
+      amount: amount,
+      interest: interest,
+      repayment_rate: parseFloat(repaymentAmount),
+      repayment_due_date: repayment_due_date,
+      repayment_start_date: repayment_commencement_date,
+      issue_date: start_date,
+      repayment_intervals: repayment_counts,
+      loan_duration_category: dto.loan_durtion_category_id,
+      expected_repayment_amount: loanRepaymentTotal,
+      reference: generateReference(),
+    });
+
+    if (responseData) {
+      message = 'Data creted';
+      status = true;
+      statusCode = HttpStatus.CREATED;
     }
+
     return response
       .status(statusCode)
       .send(responseStructure(status, message, responseData, statusCode));
@@ -302,9 +286,9 @@ export class ApplicationService extends ConfigHelperService {
     loanDurationPlan: LoanRepaymentDurationCategory,
   ): Promise<any> {
     const type = loanType.type;
-    if (type === this.DAILY) {
+    if (type === DaysAndWeekAndMonths.DAILY) {
       return this.dailyLoansFormating(dto);
-    } else if (type === this.WEEKLY) {
+    } else if (type === DaysAndWeekAndMonths.WEEKLY) {
       return this.weeklyLoansFormating(dto, loanDurationPlan);
     }
 
@@ -321,22 +305,16 @@ export class ApplicationService extends ConfigHelperService {
     let repaymenDurationtPlan =
       this.getRepaymentDurationLoanPlan(repaymentPlan);
     const type = loanType.type;
-    if (type === this.DAILY) {
+    if (type === DaysAndWeekAndMonths.DAILY) {
       repayment_counts = 22; //for daily loans
-    } else if (type === this.WEEKLY) {
+    } else if (type === DaysAndWeekAndMonths.WEEKLY) {
       repaymenDurationtPlan *= 30; //days
       repayment_counts = Math.floor(repaymenDurationtPlan / 7); //days in a week
-    } else if (type === this.MONTHLY) {
+    } else if (type === DaysAndWeekAndMonths.MONTHLY) {
       repayment_counts = repaymenDurationtPlan;
     }
     return repayment_counts;
   }
-
-  /**
-   * Get loan information for a user
-   * @param user
-   * @returns
-   */
 
   /**
    * approve a new loan request and returns the details
@@ -353,30 +331,20 @@ export class ApplicationService extends ConfigHelperService {
     let message = '';
     let responseData = null;
 
-    try {
-      const loan = await this.loanRepo
-        .createQueryBuilder('loan')
-        .where('loan.id = :loanId', { loanId: dto.loan_id })
-        .update({ verification_status: dto.status })
-        .returning('*')
-        .updateEntity(true)
-        .execute();
-      const raw = await loan.raw;
+    const loan = await this.updateEntity(dto.loan_id, 'id', {
+      verification_status: dto.status,
+    });
 
-      if (!raw.length) {
-        message = 'Loan does not exists';
-        statusCode = HttpStatus.NOT_FOUND;
-      } else {
-        message = `Loan is ${dto.status}`;
-        status = true;
-        statusCode = HttpStatus.CREATED;
-        responseData = raw[0];
-      }
-    } catch (e) {
-      logErrors(e);
-      message = 'there was an error. please try again';
-      statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
+    if (!loan) {
+      message = 'Loan does not exists';
+      statusCode = HttpStatus.NOT_FOUND;
+    } else {
+      message = `Loan is ${dto.status}`;
+      status = true;
+      statusCode = HttpStatus.CREATED;
+      responseData = loan;
     }
+
     return response
       .status(statusCode)
       .send(responseStructure(status, message, responseData, statusCode));

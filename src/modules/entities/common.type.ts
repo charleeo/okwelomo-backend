@@ -47,3 +47,9 @@ export enum InterestPaymentStatus {
   paid_upfront = 'paid',
   not_paid_upfront = 'not_paid',
 }
+export enum DaysAndWeekAndMonths {
+  DAILY = 'daily',
+  MONTHLY = 'monthly',
+  WEEKLY = 'weekly',
+  YEARLY = 'yearly',
+}

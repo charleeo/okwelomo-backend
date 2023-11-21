@@ -49,32 +49,24 @@ export class AuthService {
 
   public async login(req, res) {
     let status: boolean;
-    let error: string | null;
     let message = '';
     let code = 200;
     let responseData = null;
-    try {
-      // user = instanceToPlain(user)//convert it into a plain object
-      const user = await this.userService.findOneByEmail(req.email);
 
-      const token = await this.generateToken(instanceToPlain(user));
-      if (token) {
-        status = true;
-        message = 'Token generated and login successful';
-        code = 200;
-      }
-      delete user['password'];
-      delete user['created_at'];
-      delete user['updated_at'];
-      responseData = user;
-      responseData.token = token;
-    } catch (e) {
-      error = e.message;
-      code = 500;
-      message = 'There was an error. Please retry';
+    // user = instanceToPlain(user)//convert it into a plain object
+    const user = await this.userService.findOneByEmail(req.email);
+
+    const token = await this.generateToken(instanceToPlain(user));
+    if (token) {
+      status = true;
+      message = 'Token generated and login successful';
+      code = 200;
     }
-
-    logData(responseData, Request, error ?? message, code);
+    delete user['password'];
+    delete user['created_at'];
+    delete user['updated_at'];
+    responseData = user;
+    responseData.token = token;
     return res
       .status(HttpStatus.OK)
       .send(responseStructure(status, message, responseData, HttpStatus.OK));

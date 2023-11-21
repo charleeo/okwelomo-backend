@@ -105,13 +105,15 @@ export class LoanSettingService extends ConfigHelperService {
   }
 
   async getRepaymentDurationCategoriesById(id) {
-    return await this.loanRepaymentDurationRepo.findOne({ where: { id } });
+    return await this.loanRepaymentDurationRepo.findOneOrFail({
+      where: { id },
+    });
   }
 
   async getLoanTypeById(key: string | number) {
     return await this.loanTypeRepo
       .createQueryBuilder()
       .where('id = :loanId', { loanId: key })
-      .getOne();
+      .getOneOrFail();
   }
 }

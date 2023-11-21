@@ -11,23 +11,20 @@ import { LoanRepayment } from '../../entities/loan.repayments.entity';
 import { LoanType } from 'src/modules/config/entities/loan.type.entity';
 import { generateReference } from 'src/common/helpers/generals';
 import { LoanRepaymentConfirmationDto } from '../../dto/repayment.confirmation.dto';
+import { BaseDataSource } from 'src/common/helpers/base.data.ource';
+import { DaysAndWeekAndMonths } from 'src/modules/entities/common.type';
+import { ApplicationService } from '../application/application.service';
 
 @Injectable()
-export class RepaymentService {
-  private readonly DAILY: string;
-  private readonly MONTHLY: string;
-  private readonly WEEKLY: string;
-  private readonly YEARLY: string;
+export class RepaymentService extends BaseDataSource {
   private readonly CODE: string;
   constructor(
     private readonly loanRepo: LoanRepository,
+    private readonly loanService: ApplicationService,
     private readonly loanRepaymentRepo: LoanRepaymentRepository,
     private readonly loanSettingService: LoanSettingService,
   ) {
-    this.DAILY = 'daily';
-    this.MONTHLY = 'monthly';
-    this.WEEKLY = 'weekly';
-    this.YEARLY = 'yearly';
+    super(loanRepaymentRepo);
     this.CODE = 'RPM_CODE_';
   }
 
@@ -45,46 +42,38 @@ export class RepaymentService {
     let statusCode: HttpStatus;
     let message = '';
     let responseData = null;
-    try {
-      const reference = dto.reference_number;
-      const repayment_amount = dto.repayment_amount;
-      const loan = await this.loan(reference);
-      if (loan) {
-        const loanType = await this.loanSettingService.getLoanTypeById(
-          loan.loan_type,
-        );
 
-        //repayment data
-        const repaymentObject = await this.setRepaymentObject(
-          loan,
-          loanType,
-          repayment_amount,
-        );
+    const reference = dto.reference_number;
+    const repayment_amount = dto.repayment_amount;
+    const loan = await this.loan(reference);
 
-        const payment = await this.loanRepaymentRepo.save({
-          amount: repayment_amount,
-          repayments_data: repaymentObject,
-          reference,
-          repayment_reference: generateReference(this.CODE),
-        });
+    const loanType = await this.loanSettingService.getLoanTypeById(
+      loan.loan_type,
+    );
 
-        if (payment) {
-          statusCode = HttpStatus.CREATED;
-          status = true;
-          message = 'Loan repayment data saved';
-        } else {
-          message = 'Loan repayment data not saved';
-        }
-        responseData = payment;
-      } else {
-        statusCode = HttpStatus.BAD_REQUEST;
-        message = ' Invalid loan  reference provided';
-      }
-    } catch (e) {
-      logErrors(e);
-      message = 'there was an error. please try again';
-      statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
+    //repayment data
+    const repaymentObject = await this.setRepaymentObject(
+      loan,
+      loanType,
+      repayment_amount,
+    );
+
+    const payment = await this.loanRepaymentRepo.save({
+      amount: repayment_amount,
+      repayments_data: repaymentObject,
+      reference,
+      repayment_reference: generateReference(this.CODE),
+    });
+
+    if (payment) {
+      statusCode = HttpStatus.CREATED;
+      status = true;
+      message = 'Loan repayment data saved';
+    } else {
+      message = 'Loan repayment data not saved';
     }
+    responseData = payment;
+
     return response
       .status(statusCode)
       .send(responseStructure(status, message, responseData, statusCode));
@@ -127,18 +116,18 @@ export class RepaymentService {
       payment_date: new Date(),
     };
 
-    if (loanTYpe.type === this.DAILY) {
-      repaymentObect['type'] = this.DAILY;
+    if (loanTYpe.type === DaysAndWeekAndMonths.DAILY) {
+      repaymentObect['type'] = DaysAndWeekAndMonths.DAILY;
     }
-    if (loanTYpe.type === this.MONTHLY) {
-      repaymentObect['type'] = this.MONTHLY;
+    if (loanTYpe.type === DaysAndWeekAndMonths.MONTHLY) {
+      repaymentObect['type'] = DaysAndWeekAndMonths.MONTHLY;
     }
 
-    if (loanTYpe.type === this.WEEKLY) {
-      repaymentObect['type'] = this.WEEKLY;
+    if (loanTYpe.type === DaysAndWeekAndMonths.WEEKLY) {
+      repaymentObect['type'] = DaysAndWeekAndMonths.WEEKLY;
     }
-    if (loanTYpe.type === this.YEARLY) {
-      repaymentObect['type'] = this.YEARLY;
+    if (loanTYpe.type === DaysAndWeekAndMonths.YEARLY) {
+      repaymentObect['type'] = DaysAndWeekAndMonths.YEARLY;
     }
     return repaymentObect;
   }
@@ -148,7 +137,7 @@ export class RepaymentService {
    * @param loan
    * @param object
    */
-  private async updateLoanEntity(loan, repayment) {
+  private async getData(loan, repayment) {
     let repayment_sum: number = loan.repayment_sum;
 
     repayment_sum =
@@ -159,11 +148,7 @@ export class RepaymentService {
       Number((repayment_sum / loan.expected_repayment_amount) * 100).toFixed(
         2,
       ) + '%';
-
-    await this.loanRepo.update(
-      { id: loan.id },
-      { repayment_sum, repayment_percentage },
-    );
+    return { repayment_sum, repayment_percentage };
   }
 
   public async confirmRepayment(
@@ -173,43 +158,39 @@ export class RepaymentService {
     let status = false;
     let statusCode: HttpStatus;
     let message = '';
-    let responseData = null;
-    try {
-      const repayment_reference = dto.reference_number;
-      const confirmation_status = dto.confirmation_status;
+    const responseData = {};
 
-      const repaymentData = await this.repayment(repayment_reference);
+    const repayment_reference = dto.reference_number;
+    const confirmation_status = dto.confirmation_status;
 
-      if (repaymentData) {
-        const loan = await this.loan(repaymentData.reference);
+    const repaymentData = await this.repayment(repayment_reference);
 
-        //check for the status selected if it true, then update the records
-        if (confirmation_status) {
-          await this.loanRepaymentRepo.update(
-            { repayment_reference },
-            { confirmation_status },
-          );
+    const loan = await this.loan(repaymentData.reference);
 
-          //update the loan data if this is called for the reference the first time
-          if (!repaymentData.confirmation_status) {
-            this.updateLoanEntity(loan, repaymentData);
-          }
+    //check for the status selected if it true, then update the records
+    if (confirmation_status) {
+      const updatedRepaymentData = await this.updateEntity(
+        repayment_reference,
+        'repayment_reference',
+        {
+          confirmation_status,
+        },
+      );
 
-          statusCode = HttpStatus.CREATED;
-          status = true;
-          message = 'Loan repayment data updated';
-        } else {
-          message = 'Loan repayment data not updated';
-        }
-        responseData = repaymentData;
-      } else {
-        statusCode = HttpStatus.BAD_REQUEST;
-        message = ' Invalid loan  reference provided';
+      if (!repaymentData.confirmation_status) {
+        const updatedLoan = await this.loanService.updateEntity(
+          loan.id,
+          'id',
+          await this.getData(loan, repaymentData),
+        );
+        responseData['loan'] = updatedLoan;
       }
-    } catch (e) {
-      logErrors(e);
-      message = 'there was an error. please try again';
-      statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
+      statusCode = HttpStatus.CREATED;
+      status = true;
+      message = 'Loan repayment data updated';
+      responseData['repayment'] = updatedRepaymentData;
+    } else {
+      message = 'Loan repayment data not updated';
     }
 
     return response
@@ -218,9 +199,11 @@ export class RepaymentService {
   }
 
   private async loan(reference): Promise<Loan> {
-    return await this.loanRepo.findOneBy({ reference });
+    return await this.loanRepo.findOneByOrFail({ reference });
   }
   private async repayment(repayment_reference): Promise<LoanRepayment> {
-    return await this.loanRepaymentRepo.findOneBy({ repayment_reference });
+    return await this.loanRepaymentRepo.findOneByOrFail({
+      repayment_reference,
+    });
   }
 }
