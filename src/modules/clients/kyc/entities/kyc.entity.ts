@@ -84,6 +84,13 @@ export class KYC {
   })
   kyc_level: KYCLevel;
 
+  @Column({
+    unique: true,
+    type: 'varchar',
+    nullable: true,
+  })
+  profile_picture: string;
+
   @OneToOne(() => Users)
   @JoinColumn()
   user: Users;

@@ -4,10 +4,13 @@ import {
   ArgumentsHost,
   HttpException,
   HttpStatus,
+  NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { HttpAdapterHost } from '@nestjs/core';
 import { setExceptionFilters } from 'src/common/helpers/generals';
 import { logErrors } from 'src/common/helpers/logging';
+import { QueryFailedError } from 'typeorm';
 import { EntityNotFoundError } from 'typeorm/error/EntityNotFoundError';
 
 @Catch()
@@ -20,17 +23,32 @@ export class ExceptionHandler implements ExceptionFilter {
     const { httpAdapter } = this.httpAdapterHost;
 
     const ctx = host.switchToHttp();
-    const httpStatus =
-      exception instanceof HttpException
-        ? exception.getStatus()
-        : HttpStatus.INTERNAL_SERVER_ERROR;
+    let httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
+    let message = 'Server error';
+    if (exception instanceof QueryFailedError) {
+      httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
+      message = 'Bad query implementation';
+    } else if (exception instanceof EntityNotFoundError) {
+      httpStatus = HttpStatus.NOT_FOUND;
+      message = 'Resource not found';
+    } else if (exception instanceof HttpException) {
+      httpStatus = exception.getStatus();
+      message = exception.message;
+    } else if (exception instanceof NotFoundException) {
+      httpStatus = HttpStatus.NOT_FOUND;
+      message = 'requested endpoint does not exists';
+    } else if (exception instanceof BadRequestException) {
+      httpStatus = HttpStatus.BAD_REQUEST;
+      message = 'Bad request';
+    }
 
     const responseBody = {
       statusCode: httpStatus,
-      message: exception.message,
+      message,
       status: false,
       data: null,
     };
+
     logErrors(exception);
     httpAdapter.reply(ctx.getResponse(), responseBody, httpStatus);
   }

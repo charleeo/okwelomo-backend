@@ -33,7 +33,7 @@ export class KycService {
           .status(HttpStatus.BAD_REQUEST)
           .send(responseStructure(status, message, {}, HttpStatus.BAD_REQUEST));
       }
-
+      console.log(kyc);
       kyc['user'] = user.id; //always use the key that is in your entity defination, in this case, it is user and not userId
       kyc['user_id'] = user.id;
       responseData = await this.kycRepo.save(kyc);

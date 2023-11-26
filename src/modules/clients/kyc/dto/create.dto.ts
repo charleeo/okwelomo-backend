@@ -15,6 +15,7 @@ import { Gender } from 'src/modules/entities/common.type';
 
 import { ValidateField } from '../Validations/ValidateField';
 import { KYC } from '../entities/kyc.entity';
+import { IsImageFile } from 'src/config/pipes/validate.image.pipe';
 
 export class CreateKYCDTO {
   @IsNotEmpty()
@@ -32,6 +33,10 @@ export class CreateKYCDTO {
   @IsOptional()
   @IsEnum(Gender)
   public gender: Gender;
+
+  @IsOptional()
+  @IsImageFile({ message: 'invalid mime type received' })
+  profile_picture: string;
 
   @Validate(ValidateField, [KYC, 'nin'])
   @IsOptional()

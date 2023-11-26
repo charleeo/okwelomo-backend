@@ -1,7 +1,7 @@
 import { HttpStatus, Injectable, Res, Body, Request } from '@nestjs/common';
 
 import { responseStructure } from 'src/common/helpers/response.structure';
-import { logErrors } from 'src/common/helpers/logging';
+
 import { Response } from 'express';
 
 import {
@@ -22,7 +22,6 @@ import { LoanSettingService } from '../loan.settings.service';
 import { LoanRepository } from '../../repositories/loan.repository';
 import { LoanApplicationDto } from '../../dto/apply.for.loan.dto';
 import { ApproveLoanDto } from '../../dto/verify.loan.dto';
-import { Loan } from '../../entities/loan.entity';
 import { LoanRepaymentDurationCategory } from 'src/modules/config/entities/loans.category.entity';
 import { LoanType } from 'src/modules/config/entities/loan.type.entity';
 import { BaseDataSource } from 'src/common/helpers/base.data.ource';
