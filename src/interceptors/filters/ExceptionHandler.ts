@@ -31,15 +31,15 @@ export class ExceptionHandler implements ExceptionFilter {
     } else if (exception instanceof EntityNotFoundError) {
       httpStatus = HttpStatus.NOT_FOUND;
       message = 'Resource not found';
-    } else if (exception instanceof HttpException) {
-      httpStatus = exception.getStatus();
-      message = exception.message;
     } else if (exception instanceof NotFoundException) {
       httpStatus = HttpStatus.NOT_FOUND;
       message = 'requested endpoint does not exists';
     } else if (exception instanceof BadRequestException) {
-      httpStatus = HttpStatus.BAD_REQUEST;
-      message = 'Bad request';
+      httpStatus = exception.getStatus();
+      message = exception['response']['message'];
+    } else if (exception instanceof HttpException) {
+      httpStatus = exception.getStatus();
+      message = exception.message;
     }
 
     const responseBody = {
