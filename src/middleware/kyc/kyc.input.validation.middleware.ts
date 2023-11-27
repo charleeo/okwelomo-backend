@@ -17,12 +17,9 @@ export class KYCInputVaidtion implements NestMiddleware {
     if ('nin' in kyc === false && 'bvn' in kyc === false) {
       error = true;
       message = 'nin or bvn is required';
-    } else if ('nin' in kyc === true && kyc.nin === '') {
+    } else if (kyc.bvn === '' && kyc.nin === '') {
       error = true;
-      message = 'nin can not be empty when provided';
-    } else if ('bvn' in kyc === true && kyc.bvn === '') {
-      error = true;
-      message = 'bvn can not be empty when provided';
+      message = 'nin or bvn is required';
     }
 
     if (error) {

@@ -27,7 +27,7 @@ export class CreateKYCDTO {
   public lastname: string;
 
   @IsNotEmpty()
-  @Length(20, 225)
+  @Length(10, 225)
   public address: string;
 
   @IsOptional()
@@ -35,21 +35,19 @@ export class CreateKYCDTO {
   public gender: Gender;
 
   @IsOptional()
-  @IsImageFile({ message: 'invalid mime type received' })
+  @IsImageFile({ message: 'invalid mime type received!' })
   profile_picture: string;
 
   @Validate(ValidateField, [KYC, 'nin'])
   @IsOptional()
-  @Length(11)
   nin: string;
 
   @Validate(ValidateField, [KYC, 'bvn'])
   @IsOptional()
-  @Length(12)
   bvn: string;
 
   @Validate(ValidateField, [KYC, 'phone'])
   @IsNotEmpty()
-  @Length(12)
+  @Length(10)
   phone: string;
 }
