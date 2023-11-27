@@ -85,7 +85,6 @@ export class KYC {
   kyc_level: KYCLevel;
 
   @Column({
-    unique: true,
     type: 'varchar',
     nullable: true,
   })
