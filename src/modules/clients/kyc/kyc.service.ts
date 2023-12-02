@@ -33,7 +33,7 @@ export class KycService {
           .status(HttpStatus.BAD_REQUEST)
           .send(responseStructure(status, message, {}, HttpStatus.BAD_REQUEST));
       }
-      console.log(kyc);
+
       kyc['user'] = user.id; //always use the key that is in your entity defination, in this case, it is user and not userId
       kyc['user_id'] = user.id;
       responseData = await this.kycRepo.save(kyc);
@@ -91,11 +91,12 @@ export class KycService {
         .leftJoinAndSelect('kyc.user', 'user');
       qb.orderBy('kyc.id', 'DESC');
       const page = query.page && IsNumber(query.page) ? query.page : 1;
-      const limit = query.limit && IsNumber(query.limit) ? query.limit : 20;
+      const per_page =
+        query.per_page && IsNumber(query.per_page) ? query.per_page : 20;
 
       responseData = await paginate<KYC>(qb, {
         page,
-        limit,
+        limit: per_page,
         route: process.env.APP_URL + 'kyc/all',
       });
 
