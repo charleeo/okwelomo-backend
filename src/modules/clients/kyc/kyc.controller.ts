@@ -9,18 +9,18 @@ import {
   Query,
   Param,
   Delete,
-  UseInterceptors,
+  Put,
   UploadedFile,
+  Req,
 } from '@nestjs/common';
-import { extname } from 'path';
-import { diskStorage } from 'multer';
+
 import { Response } from 'express';
 import { CreateKYCDTO } from './dto/create.dto';
 import { KycService } from './kyc.service';
 import { KYC } from './entities/kyc.entity';
 import { AuthGuard } from '@nestjs/passport';
 import { VerifyKYCDTO } from './dto/verify.dto';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { UpdateKYCDTO } from './dto/update.dto';
 
 @Controller('kyc')
 @UseGuards(AuthGuard('jwt'))
@@ -60,23 +60,21 @@ export class KycController {
     return await this.kcyService.destroy(res, param);
   }
 
-  @Post('/file')
-  @UseInterceptors(
-    FileInterceptor('file', {
-      storage: diskStorage({
-        destination: './src/public/uploads',
-        filename: (req, file, callback) => {
-          const uniqueSuffix =
-            Date.now() + '-' + Math.round(Math.random() * 1e9);
-          const ext = extname(file.originalname);
-          const filename = `${uniqueSuffix}${ext}`;
-          callback(null, filename);
-        },
-      }),
-    }),
-  )
-  handleUpload(@UploadedFile() file: Express.Multer.File) {
-    console.log('file', file);
-    return 'File upload API';
+  @Put(':id')
+  async update(
+    @Body() kyc: UpdateKYCDTO,
+    @Res() res: Response,
+    @Param() params,
+  ): Promise<KYC> {
+    return await this.kcyService.updateKYC(kyc, res, params);
+  }
+
+  @Put(':id/profile')
+  async uploadKYCProfile(
+    @Req() req,
+    @Res() res: Response,
+    @Param() params,
+  ): Promise<KYC> {
+    return await this.kcyService.uploadKYCProfile(req, res, params);
   }
 }

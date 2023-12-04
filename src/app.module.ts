@@ -27,6 +27,8 @@ import { excludedRoutes } from './routes/exclude.';
 import { LoanConfigMustBeSetMiddleware } from './middleware/loan/loan-config-must-be-set/loan-config-must-be-set.middleware';
 import { LoanSettingService } from './modules/clients/loans/services/loan.settings.service';
 import { ConfigMiddlewareHelperService } from './modules/config/services/helpers.middleware.config';
+import { ServeStaticModule } from '@nestjs/serve-static/dist/serve-static.module';
+import { join } from 'path';
 
 @Module({
   imports: [
@@ -48,6 +50,9 @@ import { ConfigMiddlewareHelperService } from './modules/config/services/helpers
     AdminModule,
     AccountModule,
     ClientsModule,
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', '../public'),
+    }),
   ],
   controllers: [],
   providers: [MailsModule, LoanSettingService, ConfigMiddlewareHelperService],

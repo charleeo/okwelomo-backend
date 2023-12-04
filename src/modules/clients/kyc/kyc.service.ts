@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable, Res, Query, Param } from '@nestjs/common';
+import { HttpStatus, Injectable, Res, Query, Param, Req } from '@nestjs/common';
 import { IsNumber } from 'class-validator';
 import { KYCRepository } from './repositories/kyc.repository';
 import { CreateKYCDTO } from './dto/create.dto';
@@ -11,10 +11,15 @@ import { Pagination, paginate } from 'nestjs-typeorm-paginate';
 
 import { VerifyKYCDTO } from './dto/verify.dto';
 import { VerificationEnums } from 'src/modules/entities/common.type';
+import { FileUploadService } from 'src/modules/config/services/file.upload.service';
+import { UpdateKYCDTO } from './dto/update.dto';
+import { BaseDataSource } from 'src/common/helpers/base.data.ource';
 
 @Injectable()
-export class KycService {
-  constructor(private kycRepo: KYCRepository) {}
+export class KycService extends BaseDataSource {
+  constructor(private kycRepo: KYCRepository) {
+    super(kycRepo);
+  }
 
   async create(
     kyc: CreateKYCDTO,
@@ -90,9 +95,13 @@ export class KycService {
         .createQueryBuilder('kyc')
         .leftJoinAndSelect('kyc.user', 'user');
       qb.orderBy('kyc.id', 'DESC');
-      const page = query.page && IsNumber(query.page) ? query.page : 1;
-      const per_page =
-        query.per_page && IsNumber(query.per_page) ? query.per_page : 20;
+
+      const pageQuery = query.page;
+      const limit = query.per_page;
+
+      const page =
+        pageQuery && IsNumber(pageQuery) && pageQuery > 0 ? pageQuery : 1;
+      const per_page = limit && IsNumber(limit) && limit > 0 ? limit : 20;
 
       responseData = await paginate<KYC>(qb, {
         page,
@@ -180,27 +189,97 @@ export class KycService {
     let message = '';
     let responseData = null;
     let statusCode: HttpStatus;
-    try {
-      const kyc = await this.kycRepo.findOneBy({ id: kycDto.kyc_id });
 
-      if (kyc) {
-        await this.kycRepo.update(
-          { id: kyc.id },
-          {
-            kyc_verification_status: kycDto.status,
-          },
-        );
-        message = 'KYC status updated to ' + kycDto.status;
-        responseData = kyc;
-        status = true;
-      } else message = 'KYC not found';
+    const kyc = await this.kycRepo.findOneBy({ id: kycDto.kyc_id });
+
+    if (kyc) {
+      await this.kycRepo.update(
+        { id: kyc.id },
+        {
+          kyc_verification_status: kycDto.status,
+        },
+      );
+      message = 'KYC status updated to ' + kycDto.status;
+      responseData = kyc;
+      status = true;
       statusCode = HttpStatus.OK;
-    } catch (e) {
-      message = 'There was an error';
-      logErrors(e.message);
-      statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
+    } else {
+      message = 'KYC not found';
+      statusCode = HttpStatus.NOT_FOUND;
     }
 
+    return response
+      .status(statusCode)
+      .send(responseStructure(status, message, responseData, statusCode));
+  }
+
+  /**
+   * Update kyc data
+   * @param kycDto
+   * @param response
+   * @param params
+   * @returns
+   */
+  async updateKYC(
+    kycDto: UpdateKYCDTO,
+    @Res() response: Response,
+    @Param() params,
+  ): Promise<any> {
+    let status = false;
+    let message = '';
+    let responseData = null;
+    let statusCode: HttpStatus;
+
+    const updatedKYC = await this.updateEntity(params.id, 'id', {
+      ...kycDto,
+    });
+
+    if (updatedKYC) {
+      message = 'KYC  updated ';
+      responseData = updatedKYC;
+      status = true;
+      statusCode = HttpStatus.OK;
+    } else {
+      message = 'KYC not found';
+      statusCode = HttpStatus.NOT_FOUND;
+    }
+    return response
+      .status(statusCode)
+      .send(responseStructure(status, message, responseData, statusCode));
+  }
+
+  /**
+   * Upload kyc profile picture
+   * @param req
+   * @param response
+   * @param params
+   * @returns
+   */
+  async uploadKYCProfile(
+    @Req() req,
+    @Res() response: Response,
+    @Param() params,
+  ): Promise<any> {
+    let status = false;
+    let message = '';
+    let responseData = null;
+    let statusCode: HttpStatus;
+
+    const updatedKYC = await this.updateEntity(params.id, 'id', {
+      profile_picture: await this.uploadFile(req, {
+        fieldName: 'profile_picture',
+      }),
+    });
+
+    if (updatedKYC) {
+      message = 'KYC  updated ';
+      responseData = updatedKYC;
+      status = true;
+      statusCode = HttpStatus.OK;
+    } else {
+      message = 'KYC not found';
+      statusCode = HttpStatus.NOT_FOUND;
+    }
     return response
       .status(statusCode)
       .send(responseStructure(status, message, responseData, statusCode));

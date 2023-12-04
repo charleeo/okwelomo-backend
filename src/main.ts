@@ -3,7 +3,7 @@ import { AppModule } from './app.module';
 import { ValidateInputPipe } from './config/pipes/validation.pipe';
 import { useContainer } from 'class-validator';
 import cookieParser from 'cookie-parser';
-import * as compression from 'compression';
+
 import { ExceptionHandler } from './interceptors/filters/ExceptionHandler';
 import { LoggerInterceptor } from './interceptors/logger/logger.interceptor';
 async function bootstrap() {
@@ -16,7 +16,6 @@ async function bootstrap() {
   app.useGlobalFilters(new ExceptionHandler(httpAdapter));
   app.use(cookieParser());
   app.enableCors();
-  // app.use(compression())
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
   await app.listen(port);
 }

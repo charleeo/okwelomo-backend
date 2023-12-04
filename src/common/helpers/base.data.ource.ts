@@ -1,9 +1,12 @@
 import { Request } from '@nestjs/common';
+import { FileUploadService } from 'src/modules/config/services/file.upload.service';
 
 import { Users } from 'src/modules/user/entities/user.entity';
 
-export class BaseDataSource {
-  constructor(public readonly repo?: any) {}
+export class BaseDataSource extends FileUploadService {
+  constructor(public readonly repo?: any) {
+    super();
+  }
 
   /**
    * update an  entity depending on the provided conitions
@@ -12,14 +15,14 @@ export class BaseDataSource {
    * @param object
    */
   public async updateEntity(condition, col: string, object: object) {
-    const loan = await this.repo
+    const entity = await this.repo
       .createQueryBuilder()
       .where(`${col} = :key`, { key: condition })
       .update({ ...object })
       .returning('*')
       .updateEntity(true)
       .execute();
-    return loan.raw[0];
+    return entity.raw[0];
   }
 
   /**
