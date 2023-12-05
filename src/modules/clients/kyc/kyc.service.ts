@@ -184,21 +184,21 @@ export class KycService extends BaseDataSource {
   async updateKYCStatus(
     kycDto: VerifyKYCDTO,
     @Res() response: Response,
+    @Param() params: number,
   ): Promise<any> {
     let status = false;
     let message = '';
     let responseData = null;
     let statusCode: HttpStatus;
 
-    const kyc = await this.kycRepo.findOneBy({ id: kycDto.kyc_id });
+    // const kyc = await this.kycRepo.findOneBy({ id: kycDto.kyc_id });
+    const kycId = params['id'];
+    const kyc = await this.updateEntity(kycId, 'id', {
+      kyc_verification_status: kycDto.status,
+      remark: kycDto.remark,
+    });
 
     if (kyc) {
-      await this.kycRepo.update(
-        { id: kyc.id },
-        {
-          kyc_verification_status: kycDto.status,
-        },
-      );
       message = 'KYC status updated to ' + kycDto.status;
       responseData = kyc;
       status = true;

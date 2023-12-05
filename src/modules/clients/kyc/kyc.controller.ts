@@ -37,12 +37,13 @@ export class KycController {
     return await this.kcyService.create(kyc, user, res);
   }
 
-  @Post('update/status')
+  @Put(':id/update/status')
   async updateKYCStatus(
     @Body() kyc: VerifyKYCDTO,
     @Res() res: Response,
+    @Param() param: any,
   ): Promise<any> {
-    return await this.kcyService.updateKYCStatus(kyc, res);
+    return await this.kcyService.updateKYCStatus(kyc, res, param);
   }
 
   @Get('all')

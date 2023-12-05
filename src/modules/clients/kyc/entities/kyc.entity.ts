@@ -90,6 +90,9 @@ export class KYC {
   })
   profile_picture: string;
 
+  @Column({ type: 'text', nullable: true })
+  remark: string;
+
   @OneToOne(() => Users)
   @JoinColumn()
   user: Users;
