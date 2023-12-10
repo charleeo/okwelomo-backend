@@ -34,8 +34,14 @@ export class Users {
   @Column({ nullable: true, type: 'varchar' })
   firstname: string;
 
+  @Column({ nullable: true, type: 'varchar', unique:true })
+  uername: string;
+
   @Column({ nullable: true, type: 'varchar' })
   lastname: string;
+
+  @Column({ nullable: true, type: 'varchar' })
+  profile_picture: string;
 
   @Column({ type: 'varchar' })
   @Exclude()

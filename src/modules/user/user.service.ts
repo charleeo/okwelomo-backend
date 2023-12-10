@@ -28,13 +28,16 @@ import { UserRoleRepository } from '../config/repository/user_roles.repository';
 import { UserRoles } from '../config/entities/user.role.entity';
 import { instanceToPlain } from 'class-transformer';
 import { ActionRepository } from '../config/repository/actions.repository';
+import { BaseDataSource } from 'src/common/helpers/base.data.ource';
 dotenv.config();
 @Injectable()
-export class UserService {
+export class UserService extends BaseDataSource {
   constructor(
     private usersRepository: UserRepository,
     private actionRepo: ActionRepository,
-  ) {}
+  ) {
+    super(usersRepository);
+  }
 
   async create(user: CreateUserDto): Promise<Users> {
     return await this.usersRepository.save(user);

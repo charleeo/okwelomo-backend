@@ -266,8 +266,8 @@ export class KycService extends BaseDataSource {
     let statusCode: HttpStatus;
 
     const updatedKYC = await this.updateEntity(params.id, 'id', {
-      profile_picture: await this.uploadFile(req, {
-        fieldName: 'profile_picture',
+      id_card: await this.uploadFile(req, {
+        fieldName: 'id_card',
       }),
     });
 

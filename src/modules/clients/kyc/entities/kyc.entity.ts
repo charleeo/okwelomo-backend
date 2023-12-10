@@ -88,7 +88,7 @@ export class KYC {
     type: 'varchar',
     nullable: true,
   })
-  profile_picture: string;
+  id_card: string;
 
   @Column({ type: 'text', nullable: true })
   remark: string;
