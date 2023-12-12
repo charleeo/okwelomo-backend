@@ -42,6 +42,10 @@ export class UserService extends BaseDataSource {
     return this.usersRepository.findOneBy({ email });
   }
 
+  getProfile(uuid: string): Promise<Users | null> {
+    return this.usersRepository.findOneBy({ uuid });
+  }
+
   async findOneWithRoles(email: string): Promise<any> {
     const user = await this.usersRepository.findOne({
       relations: {

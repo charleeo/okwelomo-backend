@@ -46,6 +46,11 @@ export class UserController {
     return this.userService.findOne(id);
   }
 
+  @Get('profile/:id')
+  getProfile(@Param('id') uuid: string) {
+    return this.userService.getProfile(uuid);
+  }
+
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     return this.userService.update(+id, updateUserDto);
