@@ -1,25 +1,18 @@
-import { Exclude } from 'class-transformer';
-
 import {
   Gender,
   KYCLevel,
   VerificationEnums,
 } from 'src/modules/entities/common.type';
 import { Users } from 'src/modules/user/entities/user.entity';
-
 import {
-  Entity,
-  PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
-  UpdateDateColumn,
-  OneToMany,
-  OneToOne,
-  JoinColumn,
-  JoinTable,
-  ManyToMany,
-  ManyToOne,
+  Entity,
   Generated,
+  JoinColumn,
+  OneToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 
 @Entity()
@@ -89,6 +82,12 @@ export class KYC {
     nullable: true,
   })
   id_card: string;
+
+  @Column({
+    type: 'varchar',
+    nullable: true,
+  })
+  id_card_type: string;
 
   @Column({ type: 'text', nullable: true })
   remark: string;

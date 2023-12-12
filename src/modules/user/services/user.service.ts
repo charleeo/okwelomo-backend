@@ -1,34 +1,21 @@
-import {
-  BadRequestException,
-  DefaultValuePipe,
-  Injectable,
-  ParseIntPipe,
-  Query,
-  Req,
-} from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import * as dotenv from 'dotenv';
-import {
-  paginate,
-  Pagination,
-  IPaginationOptions,
-} from 'nestjs-typeorm-paginate';
-
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { Users } from './entities/user.entity';
-import { UserRepository } from './user.repository';
-
-import { responseStructure } from 'src/common/helpers/response.structure';
-import { logData, logErrors } from 'src/common/helpers/logging';
-import { Request } from 'express';
-import { IsNumber } from 'class-validator';
-import { UserRoleRepository } from '../config/repository/user_roles.repository';
-import { UserRoles } from '../config/entities/user.role.entity';
 import { instanceToPlain } from 'class-transformer';
-import { ActionRepository } from '../config/repository/actions.repository';
+import { IsNumber } from 'class-validator';
+import * as dotenv from 'dotenv';
+import { Request } from 'express';
+import { paginate, Pagination } from 'nestjs-typeorm-paginate';
 import { BaseDataSource } from 'src/common/helpers/base.data.ource';
+import { logData, logErrors } from 'src/common/helpers/logging';
+import { responseStructure } from 'src/common/helpers/response.structure';
+
+import { Injectable, Query, Req } from '@nestjs/common';
+
+import { UserRoles } from '../../config/entities/user.role.entity';
+import { ActionRepository } from '../../config/repository/actions.repository';
+import { CreateUserDto } from '../dto/create-user.dto';
+import { UpdateUserDto } from '../dto/update-user.dto';
+import { Users } from '../entities/user.entity';
+import { UserRepository } from '../user.repository';
+
 dotenv.config();
 @Injectable()
 export class UserService extends BaseDataSource {

@@ -70,12 +70,12 @@ export class KycController {
     return await this.kcyService.updateKYC(kyc, res, params);
   }
 
-  @Put(':id/profile')
+  @Put(':id/id_card')
   async uploadKYCProfile(
     @Req() req,
     @Res() res: Response,
     @Param() params,
   ): Promise<KYC> {
-    return await this.kcyService.uploadKYCProfile(req, res, params);
+    return await this.kcyService.uploadKYCIDCard(req, res, params);
   }
 }

@@ -1,19 +1,26 @@
-import { HttpStatus, Injectable, Res, Query, Param, Req } from '@nestjs/common';
 import { IsNumber } from 'class-validator';
-import { KYCRepository } from './repositories/kyc.repository';
-import { CreateKYCDTO } from './dto/create.dto';
-import { KYC } from './entities/kyc.entity';
-import { Users } from 'src/modules/user/entities/user.entity';
+import { Response } from 'express';
+import { paginate } from 'nestjs-typeorm-paginate';
+import { BaseDataSource } from 'src/common/helpers/base.data.ource';
 import { logErrors } from 'src/common/helpers/logging';
 import { responseStructure } from 'src/common/helpers/response.structure';
-import { Response, query } from 'express';
-import { Pagination, paginate } from 'nestjs-typeorm-paginate';
-
-import { VerifyKYCDTO } from './dto/verify.dto';
 import { VerificationEnums } from 'src/modules/entities/common.type';
-import { FileUploadService } from 'src/modules/config/services/file.upload.service';
+import { Users } from 'src/modules/user/entities/user.entity';
+
+import {
+  HttpStatus,
+  Injectable,
+  Param,
+  Query,
+  Req,
+  Res,
+} from '@nestjs/common';
+
+import { CreateKYCDTO } from './dto/create.dto';
 import { UpdateKYCDTO } from './dto/update.dto';
-import { BaseDataSource } from 'src/common/helpers/base.data.ource';
+import { VerifyKYCDTO } from './dto/verify.dto';
+import { KYC } from './entities/kyc.entity';
+import { KYCRepository } from './repositories/kyc.repository';
 
 @Injectable()
 export class KycService extends BaseDataSource {
@@ -255,7 +262,7 @@ export class KycService extends BaseDataSource {
    * @param params
    * @returns
    */
-  async uploadKYCProfile(
+  async uploadKYCIDCard(
     @Req() req,
     @Res() response: Response,
     @Param() params,

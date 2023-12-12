@@ -1,16 +1,15 @@
-import { ConflictException, Injectable, HttpStatus } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
-import { JwtService } from '@nestjs/jwt';
-import { UserService } from '../user/user.service';
-import { logData } from 'src/common/helpers/logging';
 import { instanceToPlain } from 'class-transformer';
-import { ConfigService } from '../config/services/config.service';
-import { ADMINROLES, ALLDUTIES } from 'src/config/constants';
-import { LoginDto } from './dto/login.dto';
-import { Roles } from '../config/entities/roles.entity';
-import { Action } from 'rxjs/internal/scheduler/Action';
-import { Actions } from '../config/entities/actions.entity';
 import { responseStructure } from 'src/common/helpers/response.structure';
+
+import {
+  HttpStatus,
+  Injectable,
+} from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+
+import { UserService } from '../user/services/user.service';
+
 @Injectable()
 export class AuthService {
   constructor(

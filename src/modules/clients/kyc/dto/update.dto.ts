@@ -1,17 +1,9 @@
-import {
-  IsNotEmpty,
-  IsOptional,
-  Validate,
-  Length,
-  IsEnum,
-  IsNumber,
-} from 'class-validator';
-
-import { Gender } from 'src/modules/entities/common.type';
-import { ValidateField } from '../Validations/ValidateField';
-import { KYC } from '../entities/kyc.entity';
+import { IsEnum, IsOptional, Length, Validate } from 'class-validator';
 import { IsImageFile } from 'src/config/pipes/validate.image.pipe';
-import { ValidateKYCId } from '../Validations/ValidateKYCId';
+import { Gender } from 'src/modules/entities/common.type';
+
+import { KYC } from '../entities/kyc.entity';
+import { ValidateField } from '../Validations/ValidateField';
 
 export class UpdateKYCDTO {
   @IsOptional()
@@ -42,6 +34,10 @@ export class UpdateKYCDTO {
   @Validate(ValidateField, [KYC, 'phone'])
   @Length(10)
   phone: string;
+
+  @IsOptional()
+  @Length(10)
+  id_card_type: string;
 
   @IsOptional()
   @IsImageFile({ message: 'invalid mime type received!' })
