@@ -56,7 +56,6 @@ export class AuthService {
     let code = 200;
     let responseData = null;
 
-    // user = instanceToPlain(user)//convert it into a plain object
     const user = await this.userService.findOneByEmail(req.email);
 
     const { token, refreshToken } = await this.generateToken(
@@ -67,9 +66,11 @@ export class AuthService {
       message = 'Login successful';
       code = 200;
     }
+
     delete user['password'];
     delete user['created_at'];
     delete user['updated_at'];
+
     responseData = user;
     responseData.token = token;
     responseData.refreshToken = refreshToken;
@@ -81,9 +82,10 @@ export class AuthService {
   public async refreshToken(user: Users, res) {
     let status: boolean;
     const message = '';
-    delete user['exp'];
 
-    const responseData = await this.jwtService.sign(user);
+    const newUser = await this.userService.findOneByEmail(user.email);
+
+    const responseData = await this.jwtService.sign(instanceToPlain(newUser));
 
     return res
       .status(HttpStatus.OK)
@@ -131,7 +133,6 @@ export class AuthService {
     const refreshToken = await this.jwtService.sign(user, {
       expiresIn: process.env.REFRESHTOKEN_EXPIRATION,
     });
-
     return { token, refreshToken };
   }
 
@@ -145,7 +146,6 @@ export class AuthService {
   }
 
   private async comparePassword(enteredPassword, dbPassword) {
-    const match = await bcrypt.compare(enteredPassword, dbPassword);
-    return match;
+    return await bcrypt.compare(enteredPassword, dbPassword);
   }
 }

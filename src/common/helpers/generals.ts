@@ -1,8 +1,10 @@
+import fs from 'fs/promises';
+import path, { sep } from 'path';
+
 export const SUNDAY = 'Sunday';
 export const SATURDAY = 'Saturday';
 export const FRIDAY = 'Friday';
-import fs from 'fs/promises';
-import path, { sep } from 'path';
+
 export function day() {
   return [
     'Sunday',
@@ -132,7 +134,6 @@ export async function setExceptionFilters(exception) {
     'utf-8',
   );
   exceptions = JSON.parse(exceptions);
-  console.log(exceptions.hasOwnProperty(exception));
 
   if (exceptions.hasOwnProperty(exception)) {
     message = exceptions[exception];

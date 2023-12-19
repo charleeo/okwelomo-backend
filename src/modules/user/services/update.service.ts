@@ -2,7 +2,13 @@ import { Response } from 'express';
 import { BaseDataSource } from 'src/common/helpers/base.data.ource';
 import { responseStructure } from 'src/common/helpers/response.structure';
 
-import { HttpStatus, Injectable, Param, Req, Res } from '@nestjs/common';
+import {
+  HttpStatus,
+  Injectable,
+  Param,
+  Req,
+  Res,
+} from '@nestjs/common';
 
 import { UpdateUserDto } from '../dto/update-user.dto';
 import { UserRepository } from '../user.repository';
@@ -66,7 +72,6 @@ export class UpdateUserService extends BaseDataSource {
     let message = '';
     let responseData = null;
     let statusCode: HttpStatus;
-    console.log(req);
     const updatedProfile = await this.updateEntity(params.id, 'uuid', req);
 
     if (updatedProfile) {
