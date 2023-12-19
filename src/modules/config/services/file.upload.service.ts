@@ -1,8 +1,11 @@
-// file.service.ts
-
-import { Injectable, BadRequestException } from '@nestjs/common';
+import * as fs from 'fs';
 import multer, { diskStorage } from 'multer';
 import { v4 as uuidv4 } from 'uuid';
+
+import {
+  BadRequestException,
+  Injectable,
+} from '@nestjs/common';
 
 @Injectable()
 export class FileUploadService {
@@ -69,6 +72,13 @@ export class FileUploadService {
         }
       });
     });
+  }
+
+  async deleteFileFromFolder(path) {
+    if (fs.existsSync(path)) {
+      // Delete the file
+      fs.unlinkSync(path);
+    }
   }
 }
 

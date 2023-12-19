@@ -102,14 +102,13 @@ export class AuthService {
     let error = null;
     let message = '';
     let responseData = null;
-    // hash the password
+
     try {
       const password = await this.hashPassword(user.password);
 
       const newUser = await this.userService.create({ ...user, password });
 
       delete newUser['password'];
-      // generate token
 
       if (newUser) {
         status = true;

@@ -35,14 +35,16 @@ export class UpdateUserService extends BaseDataSource {
     let message = '';
     let responseData = null;
     let statusCode: HttpStatus;
-
-    const updatedProfile = await this.updateEntity(params.id, 'uuid', {
+    const uuid = params.id;
+    const existingFile = await this.usersRepository.findOneBy({ uuid });
+    const updatedProfile = await this.updateEntity(uuid, 'uuid', {
       profile_picture: await this.uploadFile(req, {
         fieldName: 'profile_picture',
       }),
     });
 
     if (updatedProfile) {
+      await this.deleteFileFromFolder(`public/${existingFile.profile_picture}`);
       message = 'Profile Image updated';
       responseData = updatedProfile;
       status = true;
