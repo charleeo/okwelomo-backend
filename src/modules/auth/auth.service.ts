@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
+import { Users } from '../user/entities/user.entity';
 import { UserService } from '../user/services/user.service';
 
 @Injectable()
@@ -24,13 +25,7 @@ export class AuthService {
     // find if user exist with this email
     let userData = await this.userService.findOneWithRoles(username);
     const user = await this.userService.findOneByEmail(username);
-    userData = instanceToPlain(userData);
-    const actionarrays: string[] = [];
-    if (userData) {
-      userData.map((userActions) => {
-        actionarrays.push(userActions.tag_line);
-      });
-    }
+
     if (!user) {
       return null;
     }
@@ -40,10 +35,19 @@ export class AuthService {
     if (!match) {
       return null;
     }
+
+    userData = instanceToPlain(userData);
+    const actionarrays: string[] = [];
+    if (userData) {
+      userData.map((userActions) => {
+        actionarrays.push(userActions.tag_line);
+      });
+    }
+
     user['roleDetails'] = userData;
     user['actions'] = actionarrays;
-    delete user['password'];
-    return user;
+    const { password, ...result } = user;
+    return result;
   }
 
   public async login(req, res) {
@@ -55,10 +59,12 @@ export class AuthService {
     // user = instanceToPlain(user)//convert it into a plain object
     const user = await this.userService.findOneByEmail(req.email);
 
-    const token = await this.generateToken(instanceToPlain(user));
+    const { token, refreshToken } = await this.generateToken(
+      instanceToPlain(user),
+    );
     if (token) {
       status = true;
-      message = 'Token generated and login successful';
+      message = 'Login successful';
       code = 200;
     }
     delete user['password'];
@@ -66,9 +72,29 @@ export class AuthService {
     delete user['updated_at'];
     responseData = user;
     responseData.token = token;
+    responseData.refreshToken = refreshToken;
     return res
       .status(HttpStatus.OK)
       .send(responseStructure(status, message, responseData, HttpStatus.OK));
+  }
+
+  public async refreshToken(user: Users, res) {
+    let status: boolean;
+    const message = '';
+    delete user['exp'];
+
+    const responseData = await this.jwtService.sign(user);
+
+    return res
+      .status(HttpStatus.OK)
+      .send(
+        responseStructure(
+          status,
+          message,
+          { token: responseData },
+          HttpStatus.OK,
+        ),
+      );
   }
 
   public async createUser(user, res) {
@@ -102,7 +128,11 @@ export class AuthService {
 
   private async generateToken(user) {
     const token = await this.jwtService.sign(user);
-    return token;
+    const refreshToken = await this.jwtService.sign(user, {
+      expiresIn: process.env.REFRESHTOKEN_EXPIRATION,
+    });
+
+    return { token, refreshToken };
   }
 
   public async verifyToken(token) {

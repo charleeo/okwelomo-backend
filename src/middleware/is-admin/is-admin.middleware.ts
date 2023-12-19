@@ -1,14 +1,19 @@
 import {
+  NextFunction,
+  Request,
+  Response,
+} from 'express';
+import { responseStructure } from 'src/common/helpers/response.structure';
+import {
+  ConfigMiddlewareHelperService,
+} from 'src/modules/config/services/helpers.middleware.config';
+
+import {
+  HttpStatus,
   Injectable,
   NestMiddleware,
-  HttpStatus,
   UnauthorizedException,
 } from '@nestjs/common';
-import { Request, Response, NextFunction } from 'express';
-
-import { responseStructure } from 'src/common/helpers/response.structure';
-
-import { ConfigMiddlewareHelperService } from 'src/modules/config/services/helpers.middleware.config';
 
 @Injectable()
 export class IsAdminMiddleware implements NestMiddleware {
