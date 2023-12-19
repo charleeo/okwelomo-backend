@@ -55,9 +55,7 @@ export class AuthService {
     let message = '';
     let code = 200;
     let responseData = null;
-
     const user = await this.userService.findOneByEmail(req.email);
-
     const { token, refreshToken } = await this.generateToken(
       instanceToPlain(user),
     );
