@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable, Res, Request } from '@nestjs/common';
+import { HttpStatus, Injectable, Res, Request, Param } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { responseStructure } from 'src/common/helpers/response.structure';
 import { logErrors } from 'src/common/helpers/logging';
@@ -29,24 +29,17 @@ export class LoanSettingService extends ConfigHelperService {
     let statusCode: HttpStatus;
     let message = '';
     let responseData = null;
-
-    try {
-      const user = await this.getUser(req);
-      const config = await this.findOne(user.id);
-      if (config) {
-        responseData = await this.update(req, dto);
-        message = 'Configuration updated';
-      } else {
-        responseData = await this.create(req, dto);
-        message = 'Configuration created';
-      }
-      statusCode = HttpStatus.CREATED;
-      status = true;
-    } catch (e) {
-      logErrors(e);
-      message = 'there was an error. please try again';
-      statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
+    const user = await this.getUser(req);
+    const config = await this.findOne(user.id);
+    if (config) {
+      responseData = await this.update(req, dto);
+      message = 'Configuration updated';
+    } else {
+      responseData = await this.create(req, dto);
+      message = 'Configuration created';
     }
+    statusCode = HttpStatus.CREATED;
+    status = true;
     return response
       .status(statusCode)
       .send(responseStructure(status, message, responseData, statusCode));
@@ -115,5 +108,25 @@ export class LoanSettingService extends ConfigHelperService {
       .createQueryBuilder()
       .where('id = :loanId', { loanId: key })
       .getOneOrFail();
+  }
+
+  async show(@Res() response: Response, @Param() params): Promise<any> {
+    let status = false;
+    let message = '';
+    let responseData: object = null;
+    let statusCode: HttpStatus;
+
+    const configId = params.id;
+    responseData = await this.findOne(configId);
+
+    if (responseData) {
+      message = 'Data found';
+      status = true;
+    } else message = 'No data found';
+    statusCode = HttpStatus.OK;
+
+    return response
+      .status(statusCode)
+      .send(responseStructure(status, message, responseData, statusCode));
   }
 }

@@ -1,19 +1,24 @@
+import { Response } from 'express';
+
 import {
-  Controller,
-  UseGuards,
-  Post,
-  Res,
   Body,
+  Controller,
+  Get,
+  Param,
+  Post,
   Request as NestRequest,
+  Res,
+  UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { LoanSettingService } from '../services/loan.settings.service';
+
 import { LoanSettingDTO } from '../dto/loan.setting.dto';
+import { LoanSettingService } from '../services/loan.settings.service';
 
 @Controller('loan-setting')
 @UseGuards(AuthGuard('jwt'))
 export class LoanSettingController {
-  constructor(private loanService: LoanSettingService) {}
+  constructor(private loanSettingService: LoanSettingService) {}
 
   @Post('/')
   async create(
@@ -21,6 +26,11 @@ export class LoanSettingController {
     @Res() res,
     @NestRequest() req,
   ): Promise<any> {
-    return await this.loanService.configure(loan, res, req);
+    return await this.loanSettingService.configure(loan, res, req);
+  }
+
+  @Get(':id')
+  async show(@Res() res: Response, @Param() param: any): Promise<any> {
+    return await this.loanSettingService.show(res, param);
   }
 }

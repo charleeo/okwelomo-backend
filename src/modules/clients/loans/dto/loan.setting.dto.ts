@@ -28,7 +28,6 @@ export class LoanSettingDTO {
   @Length(3, 225)
   receiving_bank: string;
 
-  @IsOptional()
-  @IsNumber()
+  @IsNotEmpty()
   default_loan_type: number;
 }

@@ -1,33 +1,40 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
-import { RoleRepository } from '../repository/roles.repository';
-import { ActionRepository } from '../repository/actions.repository';
-import { DutyRepository } from '../repository/duties.repository';
-
-import roles from '../../../storage/data/roles.json';
-import adminUsers from '../../../storage/data/super_tech_admin.json';
-import actions from '../../../storage/data/actions.json';
-import locations from '../../../storage/data/locations.json';
-import duties from '../../../storage/data/duties.json';
-import loanTypes from '../../../storage/data/loan.types.json';
-
-import { Roles } from '../entities/roles.entity';
-import { UserRoleRepository } from '../repository/user_roles.repository';
-import {
-  ALLDUTIES,
-  ADMINROLES,
-  NOTASSIGNED,
-  NOACTIONASSIGNED,
-} from '../../../config/constants';
-import { responseStructure } from '../../../common/helpers/response.structure';
-import { UserRoles } from '../entities/user.role.entity';
-import { LocationRepository } from '../repository/locations.repository';
-import { logErrors } from 'src/common/helpers/logging';
-import { UserRepository } from '../../user/user.repository';
-import { Duties } from '../entities/duties.entity';
 import * as bcrypt from 'bcrypt';
 import { instanceToPlain } from 'class-transformer';
-import { LoanRepaymentDurationCategoryRepository } from '../repository/loan.repayment.duration.category.repository';
+import { Response } from 'express';
+import { logErrors } from 'src/common/helpers/logging';
+
+import {
+  HttpStatus,
+  Injectable,
+  Res,
+} from '@nestjs/common';
+
+import { responseStructure } from '../../../common/helpers/response.structure';
+import {
+  ADMINROLES,
+  ALLDUTIES,
+  NOACTIONASSIGNED,
+  NOTASSIGNED,
+} from '../../../config/constants';
+import actions from '../../../storage/data/actions.json';
+import duties from '../../../storage/data/duties.json';
+import loanTypes from '../../../storage/data/loan.types.json';
+import locations from '../../../storage/data/locations.json';
+import roles from '../../../storage/data/roles.json';
+import adminUsers from '../../../storage/data/super_tech_admin.json';
+import { UserRepository } from '../../user/user.repository';
+import { Duties } from '../entities/duties.entity';
+import { Roles } from '../entities/roles.entity';
+import { UserRoles } from '../entities/user.role.entity';
+import { ActionRepository } from '../repository/actions.repository';
+import { DutyRepository } from '../repository/duties.repository';
+import {
+  LoanRepaymentDurationCategoryRepository,
+} from '../repository/loan.repayment.duration.category.repository';
 import { LoanTypeRepository } from '../repository/loan.type.repository';
+import { LocationRepository } from '../repository/locations.repository';
+import { RoleRepository } from '../repository/roles.repository';
+import { UserRoleRepository } from '../repository/user_roles.repository';
 
 @Injectable()
 export class ConfigService {
@@ -257,5 +264,20 @@ export class ConfigService {
 
   async getCategoriesById(id) {
     return await this.loanCategory.findOne({ where: { id } });
+  }
+
+  async getLoanDependencies(@Res() response: Response) {
+    let error: string;
+    const message = '';
+    let responseData: object = {};
+    let status: boolean;
+    let statusCode: HttpStatus;
+    const loanType = await this.loanType.find();
+    const loanCategoryDuration = await this.loanCategory.find();
+    statusCode = HttpStatus.OK;
+    responseData = { loan_type: loanType, loan_duration: loanCategoryDuration };
+    return response
+      .status(statusCode)
+      .send(responseStructure(status, message, responseData, statusCode));
   }
 }
