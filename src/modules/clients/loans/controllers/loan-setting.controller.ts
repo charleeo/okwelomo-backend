@@ -13,6 +13,7 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 
 import { LoanSettingDTO } from '../dto/loan.setting.dto';
+import { LoanSettingVerifyPasswordDTO } from '../dto/loan.setting.verify-password.dto';
 import { LoanSettingService } from '../services/loan.settings.service';
 
 @Controller('loan-setting')
@@ -32,5 +33,14 @@ export class LoanSettingController {
   @Get(':id')
   async show(@Res() res: Response, @Param() param: any): Promise<any> {
     return await this.loanSettingService.show(res, param);
+  }
+
+  @Post(':id/verify-password')
+  async verifyPassword(
+    @Res() res: Response,
+    @Param() param: any,
+    @Body() dto: LoanSettingVerifyPasswordDTO,
+  ): Promise<any> {
+    return await this.loanSettingService.verifyPassword(res, param, dto);
   }
 }

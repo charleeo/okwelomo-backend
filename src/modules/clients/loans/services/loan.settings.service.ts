@@ -1,14 +1,16 @@
-import { HttpStatus, Injectable, Res, Request, Param } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
-import { responseStructure } from 'src/common/helpers/response.structure';
-import { logErrors } from 'src/common/helpers/logging';
 import { Response } from 'express';
-import { LoanSettingRepository } from '../repositories/loan.setting.repository';
-import { LoanSettingDTO } from '../dto/loan.setting.dto';
-import { LoanSetting } from '../entities/loan.settings.entity';
-import { ConfigHelperService } from 'src/modules/config/services/helpers.config';
+import { responseStructure } from 'src/common/helpers/response.structure';
 import { LoanRepaymentDurationCategoryRepository } from 'src/modules/config/repository/loan.repayment.duration.category.repository';
 import { LoanTypeRepository } from 'src/modules/config/repository/loan.type.repository';
+import { ConfigHelperService } from 'src/modules/config/services/helpers.config';
+
+import { HttpStatus, Injectable, Param, Request, Res } from '@nestjs/common';
+
+import { LoanSettingDTO } from '../dto/loan.setting.dto';
+import { LoanSettingVerifyPasswordDTO } from '../dto/loan.setting.verify-password.dto';
+import { LoanSetting } from '../entities/loan.settings.entity';
+import { LoanSettingRepository } from '../repositories/loan.setting.repository';
 
 @Injectable()
 export class LoanSettingService extends ConfigHelperService {
@@ -124,6 +126,37 @@ export class LoanSettingService extends ConfigHelperService {
       status = true;
     } else message = 'No data found';
     statusCode = HttpStatus.OK;
+
+    return response
+      .status(statusCode)
+      .send(responseStructure(status, message, responseData, statusCode));
+  }
+
+  async verifyPassword(
+    @Res() response: Response,
+    @Param() params,
+    dto: LoanSettingVerifyPasswordDTO,
+  ): Promise<any> {
+    let status = false;
+    let message = '';
+    const responseData: object = null;
+    let statusCode: HttpStatus;
+
+    const configId = params.id;
+    const config: LoanSetting = await this.findOne(configId);
+
+    const match = await bcrypt.compare(
+      dto.password,
+      config.application_password,
+    );
+    if (match) {
+      message = 'Application password matched';
+      status = true;
+      statusCode = HttpStatus.OK;
+    } else {
+      message = 'Wrong application password';
+      statusCode = HttpStatus.BAD_REQUEST;
+    }
 
     return response
       .status(statusCode)
