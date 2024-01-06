@@ -1,7 +1,10 @@
+import { Users } from 'src/modules/user/entities/user.entity';
+
 import { Injectable } from '@nestjs/common';
+
+import { Loan } from '../../entities/loan.entity';
 import { LoanRepository } from '../../repositories/loan.repository';
 import { LoanSettingService } from '../loan.settings.service';
-import { Loan } from '../../entities/loan.entity';
 
 @Injectable()
 export class LoanDataService {
@@ -18,7 +21,7 @@ export class LoanDataService {
     this.WEEKLY = 'weekly';
   }
 
-  public async getAloanForAUSer(user, status): Promise<Loan> {
+  public async getAloanForAUSer(user: Users, status): Promise<Loan> {
     const loanData = await this.loanRepo
       .createQueryBuilder('loan')
       .where('loan.verification_status = :status', {
