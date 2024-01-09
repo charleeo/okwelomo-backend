@@ -1,22 +1,26 @@
 import {
-  ValidatorConstraint,
-  ValidatorConstraintInterface,
   ValidationArguments,
+  ValidatorConstraint,
+  ValidatorConstraintInterface
 } from 'class-validator';
+
 import { Injectable } from '@nestjs/common';
-import { KycService } from '../kyc.service';
+
+import { KYCRepository } from '../repositories/kyc.repository';
 
 @ValidatorConstraint({ name: 'validate_phone', async: true })
 @Injectable()
 export class ValidateField implements ValidatorConstraintInterface {
-  constructor(private readonly service: KycService) {}
+  constructor(private readonly service: KYCRepository) {}
 
   validate = async (
     value: any,
-    args: ValidationArguments,
+    args: ValidationArguments
   ): Promise<boolean> => {
     const [entityClass, fieldName] = args.constraints;
-    const entity = await this.service.findOne(value, fieldName);
+    const entity = await this.service.findOne({
+      where: { [`${fieldName}`]: value }
+    });
     if (entity) {
       return false;
     } else {
