@@ -2,6 +2,7 @@ import {
   IsEnum,
   IsNotEmpty,
   IsNumber,
+  IsOptional,
 } from 'class-validator';
 import { InterestPaymentStatus } from 'src/modules/entities/common.type';
 
@@ -9,7 +10,7 @@ export class LoanApplicationDto {
   @IsNotEmpty()
   public amount: number;
 
-  @IsNotEmpty()
+  @IsOptional()
   // @IsDate()
   public grantedDate: Date;
 

@@ -5,6 +5,7 @@ import { responseStructure } from 'src/common/helpers/response.structure';
 import { Response } from 'express';
 
 import {
+  fullDateWithoutTime,
   generateReference,
   setPaymentCommencementDateDaily,
   setPaymentCommencementDateMonthly,
@@ -172,7 +173,7 @@ export class ApplicationService extends BaseDataSource {
   protected dailyLoansFormating(dto): any {
     const amount = dto.amount;
 
-    const grantedDate = dto.grantedDate;
+    const grantedDate =fullDateWithoutTime();
 
     const repaymentCommencementDate: Date =
       setPaymentCommencementDateDaily(grantedDate);
@@ -208,7 +209,7 @@ export class ApplicationService extends BaseDataSource {
   protected monthlyLoansFormating(dto, repaymentCat): any {
     const amount = dto.amount;
 
-    const grantedDate = dto.grantedDate;
+    const grantedDate =fullDateWithoutTime();
 
     const interest: number = this.calculateInterest(amount, 20);
 
@@ -246,7 +247,7 @@ export class ApplicationService extends BaseDataSource {
   ): any {
     const amount = dto.amount;
 
-    const grantedDate = dto.grantedDate;
+    const grantedDate =fullDateWithoutTime();
 
     const interest: number = this.calculateInterest(amount, 18);
 

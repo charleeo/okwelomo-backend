@@ -140,3 +140,18 @@ export async function setExceptionFilters(exception) {
   }
   return message;
 }
+
+export function fullDateWithoutTime() {
+  // Create a new Date object representing the current date and time
+  const currentDate = new Date();
+
+  // Extract date components
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth() + 1; // Months are zero-based, so add 1
+  const day = currentDate.getDate();
+
+  // Create a string in the format YYYY-MM-DD
+  const fullDateWithoutTime = `${year}-${month < 10 ? '0' : ''}${month}-${day < 10 ? '0' : ''}${day}`;
+
+  return fullDateWithoutTime;
+}
