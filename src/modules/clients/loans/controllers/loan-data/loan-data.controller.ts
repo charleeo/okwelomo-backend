@@ -1,6 +1,6 @@
 import { Response } from 'express';
 
-import { Controller, Get, Req, Res, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 
 import { LoanDataService } from '../../services/loan-data/loan-data.service';
@@ -11,7 +11,7 @@ export class LoanDataController {
   constructor(private loanDataService: LoanDataService) {}
 
   @Get('user/loans')
-  async getAloanForAUSer(@Req() user: any, @Res() res: Response): Promise<any> {
-    return await this.loanDataService.userLoans(user.user, res);
+  async getAUserLoans(@Req() user: any, @Res() res: Response, @Query() query:any): Promise<any> {
+    return await this.loanDataService.userLoans(user.user, res,query);
   }
 }

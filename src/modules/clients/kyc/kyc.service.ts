@@ -103,18 +103,7 @@ export class KycService extends BaseDataSource {
         .leftJoinAndSelect('kyc.user', 'user');
       qb.orderBy('kyc.id', 'DESC');
 
-      const pageQuery = query.page;
-      const limit = query.per_page;
-
-      const page =
-        pageQuery && IsNumber(pageQuery) && pageQuery > 0 ? pageQuery : 1;
-      const per_page = limit && IsNumber(limit) && limit > 0 ? limit : 20;
-
-      responseData = await paginate<KYC>(qb, {
-        page,
-        limit: per_page,
-        route: process.env.APP_URL + 'kyc/all',
-      });
+      responseData = await this.paginate<KYC>(qb,query);
 
       if (responseData['items'].length > 0) {
         message = 'Data found';

@@ -1,18 +1,21 @@
 import { Response } from 'express';
 import { responseStructure } from 'src/common/helpers/response.structure';
 
-import { HttpStatus, Injectable, Res } from '@nestjs/common';
+import { HttpStatus, Injectable, Query, Res } from '@nestjs/common';
 
 import { Loan } from '../../entities/loan.entity';
 import { LoanRepository } from '../../repositories/loan.repository';
+import { BaseDataSource } from 'src/common/helpers/base.data.ource';
 
 @Injectable()
-export class LoanDataService {
+export class LoanDataService extends BaseDataSource {
   private readonly DAILY: string;
   private readonly MONTHLY: string;
   private readonly WEEKLY: string;
 
-  constructor(private readonly loanRepo: LoanRepository) {}
+  constructor(private readonly loanRepo: LoanRepository) {
+    super(loanRepo)
+  }
 
   public async getAloanForAUSer(user, status = null): Promise<Loan> {
     const loanData = await this.loanRepo
@@ -24,25 +27,39 @@ export class LoanDataService {
       .getOne();
     return loanData;
   }
-  public async getAllloanForAUSer(user, status = null): Promise<Loan[]> {
-    const queryBuilder = await this.loanRepo
+
+  /**
+   * Get all the loans associated to this user and also be able to filter by some conditions
+   * @param user 
+   * @param status 
+   * @returns 
+   */
+  public async getAllloanForAUSer(user, status = null): Promise<any> {
+    const qb = await this.loanRepo
       .createQueryBuilder('loan')
       .where('loan.customer_id = :customerID', { customerID: user.id });
     if (status !== null) {
-      queryBuilder.where('loan.verification_status = :status', {
+      qb.where('loan.verification_status = :status', {
         status
       });
     }
-    return queryBuilder.getMany();
+    return qb;
   }
 
-  public async userLoans(user: any, @Res() res: Response): Promise<any> {
+  public async userLoans(user: any, @Res() res: Response, @Query() query: any): Promise<any> {
     let status = false;
     const message = '';
     let responseData: object = null;
     let statusCode: HttpStatus;
-    const loans = await this.getAllloanForAUSer(user);
-    if (loans.length) {
+    let route = process.env.APP_URL + 'loan-data/all'
+   
+    const loans = await this.paginate<Loan>(
+      await this.getAllloanForAUSer(user),
+      query,
+      route
+      );
+
+    if (loans['items'].length) {
       statusCode = HttpStatus.OK;
       status = true;
       responseData = loans;

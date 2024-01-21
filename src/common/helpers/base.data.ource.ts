@@ -1,7 +1,9 @@
-import { Request } from '@nestjs/common';
-import { FileUploadService } from 'src/modules/config/services/file.upload.service';
-
+import { Query, Request } from '@nestjs/common';
+import { IsNumber } from 'class-validator';
+import { paginate } from 'nestjs-typeorm-paginate';
 import { Users } from 'src/modules/user/entities/user.entity';
+import { FileUploadService } from 'src/modules/config/services/file.upload.service';
+import { SelectQueryBuilder } from 'typeorm';
 
 export class BaseDataSource extends FileUploadService {
   constructor(public readonly repo?: any) {
@@ -32,5 +34,22 @@ export class BaseDataSource extends FileUploadService {
    */
   async getUser(@Request() req): Promise<Users> {
     return req.user;
+  }
+
+ async paginate<T>(qb: SelectQueryBuilder<any>, query: any,route?:string): Promise<any> {
+    
+    const pageQuery = query.page;
+    const limit = query.per_page;
+
+    const page =
+      pageQuery && IsNumber(pageQuery) && pageQuery > 0 ? pageQuery : 1;
+    const per_page = limit && IsNumber(limit) && limit > 0 ? limit : 20;
+
+    return  await paginate<T>(qb, {
+      page,
+      limit: per_page,
+      route
+    });
+   
   }
 }
