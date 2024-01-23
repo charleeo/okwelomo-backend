@@ -35,8 +35,9 @@ export class LoanDataService extends BaseDataSource {
    * @returns 
    */
   public async getAllloanForAUSer(user, status = null): Promise<any> {
-    const qb = await this.loanRepo
+    const qb =  this.loanRepo
       .createQueryBuilder('loan')
+      .leftJoinAndSelect('loan.loan_duration_category', 'loan_repayment_duration_categoriess')
       .where('loan.customer_id = :customerID', { customerID: user.id });
     if (status !== null) {
       qb.where('loan.verification_status = :status', {
@@ -51,7 +52,7 @@ export class LoanDataService extends BaseDataSource {
     const message = '';
     let responseData: object = null;
     let statusCode: HttpStatus;
-    let route = process.env.APP_URL + 'loan-data/all'
+    let route = process.env.APP_URL + 'loan-data/user/loans'
    
     const loans = await this.paginate<Loan>(
       await this.getAllloanForAUSer(user),

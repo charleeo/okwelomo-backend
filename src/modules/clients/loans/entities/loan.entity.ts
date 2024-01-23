@@ -1,3 +1,4 @@
+import { LoanRepaymentDurationCategory } from 'src/modules/config/entities/loans.category.entity';
 import {
   ApprovalStatus,
   InterestPaymentStatus,
@@ -10,6 +11,9 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   Generated,
+  OneToMany,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 
 @Entity({ name: 'loans' })
@@ -21,7 +25,10 @@ export class Loan {
   @Generated('uuid')
   uuid: string;
 
-  @Column({ type: 'int' })
+  // @Column({ type: 'int' })
+  // loan_duration_category: number;
+  @ManyToOne(() => LoanRepaymentDurationCategory)
+  @JoinColumn({ name: 'loan_duration_category' }) // Adjust the join column name if needed
   loan_duration_category: number;
 
   @Column({ type: 'int' })

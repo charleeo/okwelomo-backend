@@ -98,12 +98,16 @@ export class KycService extends BaseDataSource {
     let responseData = null;
     let statusCode: HttpStatus;
     try {
-      const qb = await this.kycRepo
+      const qb =  this.kycRepo
         .createQueryBuilder('kyc')
         .leftJoinAndSelect('kyc.user', 'user');
       qb.orderBy('kyc.id', 'DESC');
 
-      responseData = await this.paginate<KYC>(qb,query);
+      responseData = await this.paginate<KYC>(
+        qb,
+        query,
+        process.env.APP_URL + 'kyc/all'
+      );
 
       if (responseData['items'].length > 0) {
         message = 'Data found';

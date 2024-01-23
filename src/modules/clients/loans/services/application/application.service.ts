@@ -88,7 +88,7 @@ export class ApplicationService extends BaseDataSource {
     );
     const repaymentObject = interestPaymentCheck.object;
     repaymentAmount = interestPaymentCheck.amount;
-    const loanRepaymentTotal = amount + interest;
+    const loanRepaymentTotal = parseFloat(amount) + parseFloat(interest);
 
     //Save the loan information to database and return the response
     responseData = await this.loanRepo.save({
