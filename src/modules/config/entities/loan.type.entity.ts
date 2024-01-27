@@ -1,4 +1,5 @@
-import { PrimaryGeneratedColumn, Column, Entity, Generated } from 'typeorm';
+import { Loan } from 'src/modules/clients/loans/entities/loan.entity';
+import { PrimaryGeneratedColumn, Column, Entity, Generated, OneToMany } from 'typeorm';
 
 @Entity({ name: 'loan_types' })
 export class LoanType {
@@ -17,4 +18,6 @@ export class LoanType {
 
   @Column({ type: 'varchar', length: 225 })
   status: string;
+  @OneToMany(() => Loan, (loan) => loan.loan_type)
+  loans: Loan[];
 }

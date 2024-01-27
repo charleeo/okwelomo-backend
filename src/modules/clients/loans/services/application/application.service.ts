@@ -339,7 +339,7 @@ export class ApplicationService extends BaseDataSource {
       message = 'Loan does not exists';
       statusCode = HttpStatus.NOT_FOUND;
     } else {
-      message = `Loan is ${dto.status}`;
+      message = `Loan was/is ${dto.status.split('_').join(' ')}`;
       status = true;
       statusCode = HttpStatus.CREATED;
       responseData = loan;

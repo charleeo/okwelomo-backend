@@ -35,6 +35,7 @@ import { LoanTypeRepository } from '../repository/loan.type.repository';
 import { LocationRepository } from '../repository/locations.repository';
 import { RoleRepository } from '../repository/roles.repository';
 import { UserRoleRepository } from '../repository/user_roles.repository';
+import { ApprovalStatus } from 'src/modules/entities/common.type';
 
 @Injectable()
 export class ConfigService {
@@ -276,6 +277,19 @@ export class ConfigService {
     const loanCategoryDuration = await this.loanCategory.find();
     statusCode = HttpStatus.OK;
     responseData = { loan_type: loanType, loan_duration: loanCategoryDuration };
+    return response
+      .status(statusCode)
+      .send(responseStructure(status, message, responseData, statusCode));
+  }
+  async setLoanApprovalTypes(@Res() response: Response) {
+    
+    const message = '';
+    let responseData: object = {};
+    let status: boolean;
+    let statusCode: HttpStatus;
+    
+    statusCode = HttpStatus.OK;
+    responseData = Object.values( ApprovalStatus) ;
     return response
       .status(statusCode)
       .send(responseStructure(status, message, responseData, statusCode));

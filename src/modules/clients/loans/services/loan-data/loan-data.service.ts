@@ -1,7 +1,7 @@
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { responseStructure } from 'src/common/helpers/response.structure';
 
-import { HttpStatus, Injectable, Query, Res } from '@nestjs/common';
+import { HttpStatus, Injectable, Query, Req, Res } from '@nestjs/common';
 
 import { Loan } from '../../entities/loan.entity';
 import { LoanRepository } from '../../repositories/loan.repository';
@@ -34,28 +34,34 @@ export class LoanDataService extends BaseDataSource {
    * @param status 
    * @returns 
    */
-  public async getAllloanForAUSer(user, status = null): Promise<any> {
+  public async getAllloanForAUSer(user, status = null,search=null): Promise<any> {
+    
     const qb =  this.loanRepo
       .createQueryBuilder('loan')
       .leftJoinAndSelect('loan.loan_duration_category', 'loan_repayment_duration_categoriess')
-      .where('loan.customer_id = :customerID', { customerID: user.id });
-    if (status !== null) {
-      qb.where('loan.verification_status = :status', {
+      .leftJoinAndSelect('loan.loan_type', 'loan_types')
+   
+    if(!user.is_admin){
+      qb.where('loan.customer_id = :customerID', { customerID: user.id });
+    }
+    if (status !== null && status.length ) {
+      qb.andWhere('loan.verification_status = :status', {
         status
       });
     }
     return qb;
   }
 
-  public async userLoans(user: any, @Res() res: Response, @Query() query: any): Promise<any> {
+  public async userLoans(user: any, @Res() res: Response, @Query() query: any, @Req() req:Request): Promise<any> {
+    console.log(req)
     let status = false;
     const message = '';
     let responseData: object = null;
     let statusCode: HttpStatus;
     let route = process.env.APP_URL + 'loan-data/user/loans'
-   
+    let loanStatus = query.status
     const loans = await this.paginate<Loan>(
-      await this.getAllloanForAUSer(user),
+      await this.getAllloanForAUSer(user, loanStatus),
       query,
       route
       );

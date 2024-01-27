@@ -1,3 +1,4 @@
+import { LoanType } from 'src/modules/config/entities/loan.type.entity';
 import { LoanRepaymentDurationCategory } from 'src/modules/config/entities/loans.category.entity';
 import {
   ApprovalStatus,
@@ -28,11 +29,12 @@ export class Loan {
   // @Column({ type: 'int' })
   // loan_duration_category: number;
   @ManyToOne(() => LoanRepaymentDurationCategory)
-  @JoinColumn({ name: 'loan_duration_category' }) // Adjust the join column name if needed
+  @JoinColumn({ name: 'loan_duration_category' }) 
   loan_duration_category: number;
 
-  @Column({ type: 'int' })
-  loan_type: number;
+  @ManyToOne(() => LoanType)
+  @JoinColumn({ name: 'loan_type' }) 
+  loan_type:number
 
   @Column({ type: 'int' })
   customer_id: number;

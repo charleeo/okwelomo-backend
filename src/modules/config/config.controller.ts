@@ -30,4 +30,9 @@ export class ConfigController {
   async getLoandependencies(@Res() res: Response): Promise<any> {
     return await this.configService.getLoanDependencies(res);
   }
+
+  @Get('set/loan/approval/types')
+  async setLoanApprovalTypes(@Res() res: Response): Promise<any> {
+    return await this.configService.setLoanApprovalTypes(res);
+  }
 }
