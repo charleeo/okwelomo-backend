@@ -16,6 +16,7 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
+import { LoanRepayment } from './loan.repayments.entity';
 
 @Entity({ name: 'loans' })
 export class Loan {
@@ -35,6 +36,9 @@ export class Loan {
   @ManyToOne(() => LoanType)
   @JoinColumn({ name: 'loan_type' }) 
   loan_type:number
+
+   @OneToMany(() => LoanRepayment, repayment => repayment.reference)
+  repayments: LoanRepayment[] ;
 
   @Column({ type: 'int' })
   customer_id: number;

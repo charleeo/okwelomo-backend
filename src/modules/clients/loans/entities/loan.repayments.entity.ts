@@ -7,7 +7,9 @@ import {
   OneToOne,
   JoinColumn,
   Generated,
+  ManyToOne,
 } from 'typeorm';
+import { Loan } from './loan.entity';
 
 @Entity()
 export class LoanRepayment {
@@ -21,8 +23,11 @@ export class LoanRepayment {
   @Column({ type: 'decimal', default: 0.0, precision: 10, scale: 2 })
   amount: number;
 
-  @Column({ type: 'varchar' })
-  reference: string;
+  // @Column({ type: 'varchar' })
+
+  @ManyToOne(() => Loan, user => user.repayments)
+  @JoinColumn({ name: 'reference', referencedColumnName:'reference' })
+  reference: Loan | string
 
   @Column({ type: 'varchar', nullable: true })
   repayment_reference: string;
@@ -35,6 +40,7 @@ export class LoanRepayment {
 
   @CreateDateColumn()
   created_at: Date;
+
   @UpdateDateColumn()
   updated_at: Date;
 }

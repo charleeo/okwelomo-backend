@@ -105,7 +105,7 @@ export class LoanSettingService extends ConfigHelperService {
     });
   }
 
-  async getLoanTypeById(key: string | number) {
+  async getLoanTypeById(key: string | number|any) {
     return await this.loanTypeRepo
       .createQueryBuilder()
       .where('id = :loanId', { loanId: key })

@@ -18,6 +18,7 @@ export class LoanType {
 
   @Column({ type: 'varchar', length: 225 })
   status: string;
+  
   @OneToMany(() => Loan, (loan) => loan.loan_type)
   loans: Loan[];
 }

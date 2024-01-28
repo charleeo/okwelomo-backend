@@ -34,34 +34,50 @@ export class LoanDataService extends BaseDataSource {
    * @param status 
    * @returns 
    */
-  public async getAllloanForAUSer(user, status = null,search=null): Promise<any> {
+  public async getAllloanForAUSer(user, param): Promise<any> {
     
     const qb =  this.loanRepo
       .createQueryBuilder('loan')
       .leftJoinAndSelect('loan.loan_duration_category', 'loan_repayment_duration_categoriess')
       .leftJoinAndSelect('loan.loan_type', 'loan_types')
-   
+      .leftJoinAndSelect('loan.repayments', 'repayments')
+      
     if(!user.is_admin){
       qb.where('loan.customer_id = :customerID', { customerID: user.id });
     }
-    if (status !== null && status.length ) {
+
+    if (param.status !== undefined && param.status !== null && param?.status.length ) {
+      const status = param.status
       qb.andWhere('loan.verification_status = :status', {
         status
+      });
+    }
+
+    if (param.from_amount !== undefined && param.from_amount !== null && param?.from_amount > 0 ) {
+      const amount = param.from_amount
+      qb.andWhere('loan.amount >= :from_amount', {
+       from_amount: amount
+      });
+    }
+
+    if (param.to_amount !== undefined && param.to_amount !== null && param?.to_amount > 0 ) {
+      const amount = param.to_amount
+      qb.andWhere('loan.amount <= :to_amount', {
+       to_amount: amount
       });
     }
     return qb;
   }
 
   public async userLoans(user: any, @Res() res: Response, @Query() query: any, @Req() req:Request): Promise<any> {
-    console.log(req)
+    
     let status = false;
     const message = '';
     let responseData: object = null;
     let statusCode: HttpStatus;
     let route = process.env.APP_URL + 'loan-data/user/loans'
-    let loanStatus = query.status
     const loans = await this.paginate<Loan>(
-      await this.getAllloanForAUSer(user, loanStatus),
+      await this.getAllloanForAUSer(user, query),
       query,
       route
       );

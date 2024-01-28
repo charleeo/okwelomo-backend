@@ -5,7 +5,6 @@ import { LoanSettingService } from '../loan.settings.service';
 import { LoanRepaymentRepository } from '../../repositories/loan.repayment.repository';
 import { LoanRepaymentDto } from '../../dto/loan.repayment.dto';
 import { responseStructure } from 'src/common/helpers/response.structure';
-import { logErrors } from 'src/common/helpers/logging';
 import { Loan } from '../../entities/loan.entity';
 import { LoanRepayment } from '../../entities/loan.repayments.entity';
 import { LoanType } from 'src/modules/config/entities/loan.type.entity';
@@ -45,10 +44,11 @@ export class RepaymentService extends BaseDataSource {
 
     const reference = dto.reference_number;
     const repayment_amount = dto.repayment_amount;
+    
     const loan = await this.loan(reference);
 
     const loanType = await this.loanSettingService.getLoanTypeById(
-      loan.loan_type,
+      dto.loan.loan_type['id'],
     );
 
     //repayment data
