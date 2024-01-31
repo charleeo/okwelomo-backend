@@ -31,6 +31,12 @@ export enum ApprovalStatus {
   reviewed = 'reviewed',
   decline = 'declined',
 }
+export enum RepaymentStatus {
+  confirmed = 'confirmed',
+  pending = 'pending',
+  disputed = 'disputed',
+  decline = 'declined',
+}
 
 export enum KYCLevel {
   level_one = 1,

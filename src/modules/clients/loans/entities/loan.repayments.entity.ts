@@ -10,6 +10,7 @@ import {
   ManyToOne,
 } from 'typeorm';
 import { Loan } from './loan.entity';
+import { RepaymentStatus } from 'src/modules/entities/common.type';
 
 @Entity()
 export class LoanRepayment {
@@ -23,17 +24,22 @@ export class LoanRepayment {
   @Column({ type: 'decimal', default: 0.0, precision: 10, scale: 2 })
   amount: number;
 
-  // @Column({ type: 'varchar' })
-
   @ManyToOne(() => Loan, user => user.repayments)
-  @JoinColumn({ name: 'reference', referencedColumnName:'reference' })
-  reference: Loan | string
+  @JoinColumn({name:'loan_id'})
+  loan:  Loan
 
   @Column({ type: 'varchar', nullable: true })
   repayment_reference: string;
 
-  @Column({ type: 'bool', default: false })
-  confirmation_status: boolean;
+  @Column({ 
+    type: 'enum',
+    default: RepaymentStatus.pending,
+    enum : RepaymentStatus
+    })
+  confirmation_status: string;
+
+  @Column({ type: 'text', nullable: true })
+  comment: string;
 
   @Column({ type: 'jsonb', default: {} })
   repayments_data: object;

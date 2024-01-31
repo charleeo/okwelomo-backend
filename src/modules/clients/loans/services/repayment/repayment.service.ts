@@ -11,7 +11,7 @@ import { LoanType } from 'src/modules/config/entities/loan.type.entity';
 import { generateReference } from 'src/common/helpers/generals';
 import { LoanRepaymentConfirmationDto } from '../../dto/repayment.confirmation.dto';
 import { BaseDataSource } from 'src/common/helpers/base.data.ource';
-import { DaysAndWeekAndMonths } from 'src/modules/entities/common.type';
+import { DaysAndWeekAndMonths, RepaymentStatus } from 'src/modules/entities/common.type';
 import { ApplicationService } from '../application/application.service';
 
 @Injectable()
@@ -42,10 +42,9 @@ export class RepaymentService extends BaseDataSource {
     let message = '';
     let responseData = null;
 
-    const reference = dto.reference_number;
     const repayment_amount = dto.repayment_amount;
     
-    const loan = await this.loan(reference);
+    const loan = await this.loan(dto.loan.id);
 
     const loanType = await this.loanSettingService.getLoanTypeById(
       dto.loan.loan_type['id'],
@@ -53,15 +52,16 @@ export class RepaymentService extends BaseDataSource {
 
     //repayment data
     const repaymentObject = await this.setRepaymentObject(
-      loan,
+      dto.loan,
       loanType,
       repayment_amount,
     );
 
+    
     const payment = await this.loanRepaymentRepo.save({
       amount: repayment_amount,
       repayments_data: repaymentObject,
-      reference,
+      loan:loan,
       repayment_reference: generateReference(this.CODE),
     });
 
@@ -87,7 +87,7 @@ export class RepaymentService extends BaseDataSource {
   public async getLoansByRefernce(reference): Promise<LoanRepayment[]> {
     const repayments = await this.loanRepaymentRepo
       .createQueryBuilder('repayment')
-      .where('repayment.reference = :referenceNo', { referenceNo: reference })
+      .where('repayment.loan_id = :loanId', { loanId: reference })
       .getMany();
     return repayments;
   }
@@ -100,7 +100,8 @@ export class RepaymentService extends BaseDataSource {
    * @returns
    */
   private async setRepaymentObject(loan: Loan, loanTYpe: LoanType, amount) {
-    const repaymentDataCount = await this.getLoansByRefernce(loan.reference);
+
+    const repaymentDataCount = await this.getLoansByRefernce(loan.id);
     let sum_of_payments = 0;
     if (repaymentDataCount) {
       repaymentDataCount.map((payment) => {
@@ -165,10 +166,10 @@ export class RepaymentService extends BaseDataSource {
 
     const repaymentData = await this.repayment(repayment_reference);
 
-    const loan = await this.loan(repaymentData.reference);
+    const loan = await this.loan(repaymentData.loan.id);
 
     //check for the status selected if it true, then update the records
-    if (confirmation_status) {
+    if (confirmation_status !== RepaymentStatus.pending) {
       const updatedRepaymentData = await this.updateEntity(
         repayment_reference,
         'repayment_reference',
@@ -177,13 +178,15 @@ export class RepaymentService extends BaseDataSource {
         },
       );
 
-      if (!repaymentData.confirmation_status) {
-        const updatedLoan = await this.loanService.updateEntity(
-          loan.id,
-          'id',
-          await this.getData(loan, repaymentData),
+      if (confirmation_status === RepaymentStatus.confirmed && repaymentData.confirmation_status !== RepaymentStatus.confirmed) {
+       const {repayment_sum, repayment_percentage} = await this.getData(loan, repaymentData)
+        await this.loanRepo.update(
+          {reference:loan.reference},
+          {
+            repayment_percentage,
+            repayment_sum
+          }
         );
-        responseData['loan'] = updatedLoan;
       }
       statusCode = HttpStatus.CREATED;
       status = true;
@@ -198,12 +201,15 @@ export class RepaymentService extends BaseDataSource {
       .send(responseStructure(status, message, responseData, statusCode));
   }
 
-  private async loan(reference): Promise<Loan> {
-    return await this.loanRepo.findOneByOrFail({ reference });
+  protected async loan(id): Promise<Loan> {
+    return await this.loanRepo.findOneByOrFail({ id });
   }
-  private async repayment(repayment_reference): Promise<LoanRepayment> {
-    return await this.loanRepaymentRepo.findOneByOrFail({
-      repayment_reference,
-    });
+
+protected async repayment(repayment_reference): Promise<LoanRepayment> {
+    return await this.loanRepaymentRepo.findOneOrFail(
+      { where: { repayment_reference }, relations: ['loan'] }
+    );
   }
+
+
 }

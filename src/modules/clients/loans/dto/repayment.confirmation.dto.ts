@@ -6,6 +6,6 @@ export class LoanRepaymentConfirmationDto {
   public reference_number: string;
 
   @IsNotEmpty()
-  @IsBoolean()
-  public confirmation_status: boolean;
+  // @IsBoolean()
+  public confirmation_status: string;
 }

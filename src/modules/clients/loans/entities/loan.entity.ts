@@ -37,7 +37,7 @@ export class Loan {
   @JoinColumn({ name: 'loan_type' }) 
   loan_type:number
 
-   @OneToMany(() => LoanRepayment, repayment => repayment.reference)
+   @OneToMany(() => LoanRepayment, repayment => repayment.loan)
   repayments: LoanRepayment[] ;
 
   @Column({ type: 'int' })
@@ -81,6 +81,9 @@ export class Loan {
 
   @Column({ type: 'varchar' })
   reference: string;
+
+  @Column({ type: 'text', nullable:true })
+  comment: string;
 
   @Column({
     type: 'enum',

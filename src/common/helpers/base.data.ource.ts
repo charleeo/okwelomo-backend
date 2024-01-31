@@ -1,4 +1,4 @@
-import { Query, Request } from '@nestjs/common';
+import {  Request } from '@nestjs/common';
 import { IsNumber } from 'class-validator';
 import { paginate } from 'nestjs-typeorm-paginate';
 import { Users } from 'src/modules/user/entities/user.entity';
@@ -7,6 +7,7 @@ import { SelectQueryBuilder } from 'typeorm';
 
 export class BaseDataSource extends FileUploadService {
   constructor(public readonly repo?: any) {
+    console.log(repo)
     super();
   }
 
@@ -17,6 +18,7 @@ export class BaseDataSource extends FileUploadService {
    * @param object
    */
   public async updateEntity(condition, col: string, object: object) {
+
     const entity = await this.repo
       .createQueryBuilder()
       .where(`${col} = :key`, { key: condition })

@@ -333,6 +333,7 @@ export class ApplicationService extends BaseDataSource {
 
     const loan = await this.updateEntity(dto.loan_id, 'id', {
       verification_status: dto.status,
+      comment: dto.comment
     });
 
     if (!loan) {

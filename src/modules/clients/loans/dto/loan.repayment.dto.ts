@@ -3,11 +3,11 @@ import { Loan } from '../entities/loan.entity';
 
 export class LoanRepaymentDto {
   @IsNotEmpty()
-  @IsString()
+  // @IsString()
+  @IsNumber()
   public reference_number: string;
 
   @IsNotEmpty()
-  // @IsNumber()
   public repayment_amount: number;
 
   @IsNotEmpty()

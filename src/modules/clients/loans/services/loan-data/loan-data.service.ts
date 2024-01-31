@@ -6,6 +6,7 @@ import { HttpStatus, Injectable, Query, Req, Res } from '@nestjs/common';
 import { Loan } from '../../entities/loan.entity';
 import { LoanRepository } from '../../repositories/loan.repository';
 import { BaseDataSource } from 'src/common/helpers/base.data.ource';
+import { RepaymentStatus } from 'src/modules/entities/common.type';
 
 @Injectable()
 export class LoanDataService extends BaseDataSource {
@@ -37,11 +38,12 @@ export class LoanDataService extends BaseDataSource {
   public async getAllloanForAUSer(user, param): Promise<any> {
     
     const qb =  this.loanRepo
-      .createQueryBuilder('loan')
-      .leftJoinAndSelect('loan.loan_duration_category', 'loan_repayment_duration_categoriess')
-      .leftJoinAndSelect('loan.loan_type', 'loan_types')
-      .leftJoinAndSelect('loan.repayments', 'repayments')
-      
+    .createQueryBuilder('loan')
+    .leftJoinAndSelect('loan.loan_duration_category', 'loan_repayment_duration_categoriess')
+    .leftJoinAndSelect('loan.loan_type', 'loan_types')
+    .leftJoinAndSelect('loan.repayments', 'repayments', 'repayments.confirmation_status = :status', { status: RepaymentStatus.pending })
+    .orderBy("loan.created_at", 'DESC')
+
     if(!user.is_admin){
       qb.where('loan.customer_id = :customerID', { customerID: user.id });
     }
