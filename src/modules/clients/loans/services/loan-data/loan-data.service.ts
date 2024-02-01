@@ -50,8 +50,8 @@ export class LoanDataService extends BaseDataSource {
 
     if (param.status !== undefined && param.status !== null && param?.status.length ) {
       const status = param.status
-      qb.andWhere('loan.verification_status = :status', {
-        status
+      qb.andWhere('loan.verification_status = :loanStatus', {
+        loanStatus:status
       });
     }
 

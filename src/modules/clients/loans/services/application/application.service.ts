@@ -79,7 +79,7 @@ export class ApplicationService extends BaseDataSource {
       repaymenDurationtPlan,
     );
 
-    const interestPaymentCheck = this.checInterestUpfrontPayment(
+    const interestPaymentCheck = this.checkInterestUpfrontPayment(
       dto,
       amount,
       interest,
@@ -88,7 +88,10 @@ export class ApplicationService extends BaseDataSource {
     );
     const repaymentObject = interestPaymentCheck.object;
     repaymentAmount = interestPaymentCheck.amount;
-    const loanRepaymentTotal = parseFloat(amount) + parseFloat(interest);
+    let loanRepaymentTotal = parseFloat(amount) 
+    if(dto.interest_payment_status === InterestPaymentStatus.not_paid_upfront){
+      loanRepaymentTotal + parseFloat(interest)
+    }
 
     //Save the loan information to database and return the response
     responseData = await this.loanRepo.save({
@@ -360,7 +363,7 @@ export class ApplicationService extends BaseDataSource {
    * @param repaymentAmount
    * @returns
    */
-  private checInterestUpfrontPayment(
+  private checkInterestUpfrontPayment(
     dto: LoanApplicationDto,
     loanAmount,
     interest,
@@ -379,6 +382,7 @@ export class ApplicationService extends BaseDataSource {
         interest_payment_status: dto.interest_payment_status,
       };
     }
+      
     return { object: repaymentObject, amount: repaymentAmount };
   }
 }
