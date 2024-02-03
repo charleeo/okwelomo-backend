@@ -38,22 +38,23 @@ export const dayName = (date) => {
 export const setPaymentCommencementDateDaily = (grantedDate, startDay = 2) => {
   const day_name = dayName(grantedDate);
   const date = new Date(grantedDate);
-  startDay = day_name === SUNDAY || day_name === FRIDAY ? 3 : startDay;
-  startDay = day_name === SATURDAY ? 4 : startDay;
-
-  const paymentCommencement = date.setTime(
-    date.getTime() + startDay * 24 * 60 * 60 * 1000,
-  );
+  if(day_name === SUNDAY || day_name === FRIDAY){
+    startDay =3
+  }
+  if(day_name === SATURDAY){
+    startDay =4
+  }
+  const paymentCommencement = date.setDate(date.getDate() + startDay);
   return new Date(paymentCommencement);
 };
 
 /**
  * set the date the loan repayment will commence
- * @param grantedDate
- * @param duration
+ * @param commencementDate
  * @returns
  */
 export const setPaymentDueDateDaily = (commencementDate) => {
+  
   const paymentDueDate = commencementDate.setTime(
     commencementDate.getTime() + 30 * 24 * 60 * 60 * 1000,
   );
@@ -96,6 +97,8 @@ function addMonths(date, months) {
   date.setMonth(date.getMonth() + months);
   return date;
 }
+
+
 function addWeeks(date: Date, weeks = 1) {
   date.setTime(date.getTime() + weeks);
   return date;
@@ -155,3 +158,5 @@ export function fullDateWithoutTime() {
 
   return fullDateWithoutTime;
 }
+
+

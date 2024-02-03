@@ -4,6 +4,12 @@ import { paginate } from 'nestjs-typeorm-paginate';
 import { Users } from 'src/modules/user/entities/user.entity';
 import { FileUploadService } from 'src/modules/config/services/file.upload.service';
 import { SelectQueryBuilder } from 'typeorm';
+import { Repository } from 'typeorm';
+import { PaginationDto } from 'src/modules/clients/loans/dto/pagination.dto';
+import { instanceToPlain } from 'class-transformer';
+import { Request  as ExpressRequest } from 'express';
+import { PaginationOptions } from 'src/modules/clients/loans/dto/PaginationOptions';
+
 
 export class BaseDataSource extends FileUploadService {
   constructor(public readonly repo?: any) {
@@ -54,5 +60,62 @@ export class BaseDataSource extends FileUploadService {
     });
    
   }
+
+  async  findPaginatedData<T>({
+    repository,
+    req,
+    route,
+    query,
+    order,
+    relations,
+    condition
+}: PaginationOptions<T>): Promise<any> {
+    
+    const pageQuery:number = Number(query.page);
+    const limit:number = Number(query.per_page);
+
+    const page =
+        pageQuery && Number.isInteger(pageQuery) && pageQuery > 0 ? pageQuery : 1;
+    const per_page =
+        limit && Number.isInteger(limit) && limit > 0 ? limit : 20;
+
+    const [data, total] = await repository.findAndCount({
+        skip: (page - 1) * per_page,
+        take: per_page,
+        order: order,
+        relations:[...relations],
+        relationLoadStrategy:'join',
+        where: {...condition},
+    });
+
+    const totalPages = Math.ceil(total / per_page);
+
+    const paginationDto = new PaginationDto<T>(data, total, page, per_page, totalPages);
+    
+     
+    // const baseUrl = `${req.protocol}://${req.get('host')}${route}`;
+
+    const paginationLinks = {
+        first: `${route}?page=1&per_page=${per_page}`,
+        last: `${route}?page=${totalPages}&per_page=${per_page}`,
+        prev: page > 1 ? `${route}?page=${page - 1}&per_page=${per_page}` : null,
+        next: page < totalPages ? `${route}?page=${page + 1}&per_page=${per_page}` : null
+    };
+   
+    let plainObject  = instanceToPlain(paginationDto)
+
+    return{
+      items: plainObject.data,
+      meta:{
+        currentPage: plainObject.currentPage,
+        totalItems: plainObject.total,
+        itemCount : plainObject.data.length,
+        itemsPerPage: plainObject.pageSize,
+        totalPages: plainObject.totalPages
+      },
+      link:paginationLinks
+    }
+  }
+
   
 }

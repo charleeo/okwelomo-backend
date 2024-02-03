@@ -26,7 +26,7 @@ export class LoanRepaymentDurationCategory {
   @Column({ type: 'varchar', length: 225, unique: true })
   category_tagline: string;
 
-  @OneToMany(() => Loan, (loan) => loan.loan_duration_category)
+  @OneToMany(() => Loan, (loan) => loan.loan_duration_category, {eager:true})
   loans: Loan[];
 
   @CreateDateColumn()

@@ -15,7 +15,7 @@ export class LoanApplicationDto {
   public grantedDate: Date;
 
   @IsNotEmpty()
-  public loan_durtion_category_id: number;
+  public loan_durtion_category_id: number|string|any;
 
   @IsNotEmpty()
   public loan_type: number | string | any;

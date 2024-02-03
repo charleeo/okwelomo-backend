@@ -26,6 +26,7 @@ import { ApproveLoanDto } from '../../dto/verify.loan.dto';
 import { LoanRepaymentDurationCategory } from 'src/modules/config/entities/loans.category.entity';
 import { LoanType } from 'src/modules/config/entities/loan.type.entity';
 import { BaseDataSource } from 'src/common/helpers/base.data.ource';
+import { instanceToPlain } from 'class-transformer';
 
 @Injectable()
 export class ApplicationService extends BaseDataSource {
@@ -101,9 +102,6 @@ export class ApplicationService extends BaseDataSource {
       amount: amount,
       interest: interest,
       repayment_rate: parseFloat(repaymentAmount),
-      repayment_due_date: repayment_due_date,
-      repayment_start_date: repayment_commencement_date,
-      issue_date: start_date,
       repayment_intervals: repayment_counts,
       loan_duration_category: dto.loan_durtion_category_id,
       expected_repayment_amount: loanRepaymentTotal,
@@ -177,16 +175,13 @@ export class ApplicationService extends BaseDataSource {
     const amount = dto.amount;
 
     const grantedDate =fullDateWithoutTime();
-
     const repaymentCommencementDate: Date =
       setPaymentCommencementDateDaily(grantedDate);
 
     const repaymentAmount: number = this.calCulateDailyRepaymentPlan(amount);
-
-    const repaymentDueDate: Date = setPaymentDueDateDaily(
-      repaymentCommencementDate,
-    );
-
+    
+    const repaymentDueDate: Date = setPaymentDueDateDaily(new Date( repaymentCommencementDate))
+      
     const interest = this.calculateInterest(amount, 15);
 
     return {
@@ -290,6 +285,7 @@ export class ApplicationService extends BaseDataSource {
   ): Promise<any> {
     const type = loanType.type;
     if (type === DaysAndWeekAndMonths.DAILY) {
+      console.log(dto)
       return this.dailyLoansFormating(dto);
     } else if (type === DaysAndWeekAndMonths.WEEKLY) {
       return this.weeklyLoansFormating(dto, loanDurationPlan);
@@ -333,10 +329,26 @@ export class ApplicationService extends BaseDataSource {
     let statusCode: HttpStatus;
     let message = '';
     let responseData = null;
+    const loanData = await this.loanRepo.findOne({where:{id:dto.loan_id},
+       relations:['loan_type','loan_duration_category'],
+     })
+    const loanType = loanData.loan_type
+    
 
+    const repaymenDurationtPlan =loanData.loan_duration_category
+      
+    const {
+      repayment_commencement_date,
+      repayment_due_date,
+      start_date,
+    } = await this.processLoans(dto, loanType, repaymenDurationtPlan);
+   
     const loan = await this.updateEntity(dto.loan_id, 'id', {
       verification_status: dto.status,
-      comment: dto.comment
+      comment: dto.comment,
+       repayment_due_date: repayment_due_date,
+      repayment_start_date: repayment_commencement_date,
+      issue_date: start_date,
     });
 
     if (!loan) {

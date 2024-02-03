@@ -27,17 +27,15 @@ export class Loan {
   @Generated('uuid')
   uuid: string;
 
-  // @Column({ type: 'int' })
-  // loan_duration_category: number;
   @ManyToOne(() => LoanRepaymentDurationCategory)
   @JoinColumn({ name: 'loan_duration_category' }) 
-  loan_duration_category: number;
+  loan_duration_category: LoanRepaymentDurationCategory;
 
   @ManyToOne(() => LoanType)
   @JoinColumn({ name: 'loan_type' }) 
-  loan_type:number
+  loan_type:LoanType
 
-   @OneToMany(() => LoanRepayment, repayment => repayment.loan)
+   @OneToMany(() => LoanRepayment, repayment => repayment.loan,{eager:true})
   repayments: LoanRepayment[] ;
 
   @Column({ type: 'int' })
