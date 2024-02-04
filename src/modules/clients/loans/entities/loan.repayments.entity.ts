@@ -55,5 +55,5 @@ export class LoanRepayment {
   updated_at: Date;
 
   @DeleteDateColumn()
-  dele
+  deletedAt:Date
 }
