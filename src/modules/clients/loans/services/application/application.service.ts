@@ -67,10 +67,7 @@ export class ApplicationService extends BaseDataSource {
     const {
       repayment_amount,
       interest,
-      repayment_commencement_date,
-      repayment_due_date,
       amount,
-      start_date,
     } = await this.processLoans(dto, loanType, repaymenDurationtPlan);
 
     let repaymentAmount = Number(repayment_amount).toFixed(2);
@@ -89,7 +86,8 @@ export class ApplicationService extends BaseDataSource {
     );
     const repaymentObject = interestPaymentCheck.object;
     repaymentAmount = interestPaymentCheck.amount;
-    let loanRepaymentTotal = parseFloat(amount) 
+    let loanRepaymentTotal = parseFloat(amount)
+
     if(dto.interest_payment_status === InterestPaymentStatus.not_paid_upfront){
       loanRepaymentTotal + parseFloat(interest)
     }
@@ -214,7 +212,7 @@ export class ApplicationService extends BaseDataSource {
     const repaymentDuration = this.getRepaymentDurationLoanPlan(repaymentCat);
 
     const repaymentCommencementDate: Date =
-      setPaymentCommencementDateMonthly(grantedDate);
+      setPaymentCommencementDateMonthly(new Date(grantedDate));
 
     const repaymentAmount: number = this.calculateMonthlyRepaymentPlan(
       amount,
@@ -252,7 +250,7 @@ export class ApplicationService extends BaseDataSource {
     const repaymentDuration = this.getRepaymentDurationLoanPlan(repaymentCat);
 
     const repaymentCommencementDate: Date =
-      setPaymentCommencementDateWekly(grantedDate);
+      setPaymentCommencementDateWekly(new Date(grantedDate));
 
     const repaymentAmount: number = this.calculateWeeklyRepaymentPlan(
       amount,

@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable, Res, Body, Request } from '@nestjs/common';
+import { HttpStatus, Injectable, Res, Body, Request, Req } from '@nestjs/common';
 import { Response } from 'express';
 import { LoanRepository } from '../../repositories/loan.repository';
 import { LoanSettingService } from '../loan.settings.service';
@@ -13,13 +13,13 @@ import { LoanRepaymentConfirmationDto } from '../../dto/repayment.confirmation.d
 import { BaseDataSource } from 'src/common/helpers/base.data.ource';
 import { DaysAndWeekAndMonths, RepaymentStatus } from 'src/modules/entities/common.type';
 import { ApplicationService } from '../application/application.service';
+import { LoanRepaymentDeletionDto } from '../../dto/repayment.deletion.dto';
 
 @Injectable()
 export class RepaymentService extends BaseDataSource {
   private readonly CODE: string;
   constructor(
     private readonly loanRepo: LoanRepository,
-    private readonly loanService: ApplicationService,
     private readonly loanRepaymentRepo: LoanRepaymentRepository,
     private readonly loanSettingService: LoanSettingService,
   ) {
@@ -194,6 +194,39 @@ export class RepaymentService extends BaseDataSource {
       responseData['repayment'] = updatedRepaymentData;
     } else {
       message = 'Loan repayment data not updated';
+    }
+
+    return response
+      .status(statusCode)
+      .send(responseStructure(status, message, responseData, statusCode));
+  }
+
+
+  public async deleteRepayment(
+    repayment_reference,
+    @Res() response: Response,
+     @Req() req: Request,
+  ) {
+    let status = false;
+    let statusCode: HttpStatus;
+    let message = 'no data found';
+    let responseData = {};
+     const user = await this.getUser(req);
+
+    const repaymentData = await this.loanRepaymentRepo.findOneByOrFail({repayment_reference, confirmation_status:RepaymentStatus.pending})
+
+    if(user.is_admin){
+      repaymentData.isDeleted = true
+      await this.loanRepaymentRepo.save(repaymentData)
+    }else {
+      await this.loanRepaymentRepo.delete(repaymentData.id)
+    }
+
+    if(repaymentData){
+      statusCode = HttpStatus.CREATED;
+      status = true;
+      message = 'Loan repayment data updated';
+      responseData = repaymentData
     }
 
     return response

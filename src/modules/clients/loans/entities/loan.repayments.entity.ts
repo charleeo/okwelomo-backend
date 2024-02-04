@@ -8,6 +8,7 @@ import {
   JoinColumn,
   Generated,
   ManyToOne,
+  DeleteDateColumn,
 } from 'typeorm';
 import { Loan } from './loan.entity';
 import { RepaymentStatus } from 'src/modules/entities/common.type';
@@ -47,6 +48,12 @@ export class LoanRepayment {
   @CreateDateColumn()
   created_at: Date;
 
+  @Column({ default: false,  })
+  isDeleted: boolean;
+
   @UpdateDateColumn()
   updated_at: Date;
+
+  @DeleteDateColumn()
+  dele
 }

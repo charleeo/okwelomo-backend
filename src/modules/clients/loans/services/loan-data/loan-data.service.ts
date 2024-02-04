@@ -7,10 +7,8 @@ import { Loan } from '../../entities/loan.entity';
 import { LoanRepository } from '../../repositories/loan.repository';
 import { BaseDataSource } from 'src/common/helpers/base.data.ource';
 import { RepaymentStatus } from 'src/modules/entities/common.type';
-import { PaginationDto } from '../../dto/pagination.dto';
-import { IsNumber } from 'class-validator';
 import { Users } from 'src/modules/user/entities/user.entity';
-import { LessThanOrEqual, MoreThan, MoreThanOrEqual } from 'typeorm';
+import { LessThanOrEqual, MoreThanOrEqual } from 'typeorm';
 
 @Injectable()
 export class LoanDataService extends BaseDataSource {
@@ -83,14 +81,14 @@ export class LoanDataService extends BaseDataSource {
     let message = '';
     let responseData: object = null;
     let statusCode: HttpStatus;
-    const condition = this.queryConditions(user,query)
+   
     const loanData = await this.findPaginatedData<Loan>({
       repository:this.loanRepo,
       req,
       route:'loan-data/user/loans',
       query,
       relations:['repayments','loan_type','loan_duration_category'],
-      condition,
+      condition:  this.queryConditions(user,query),
       order:{created_at:'desc'}
     })
    

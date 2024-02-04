@@ -13,7 +13,6 @@ import { PaginationOptions } from 'src/modules/clients/loans/dto/PaginationOptio
 
 export class BaseDataSource extends FileUploadService {
   constructor(public readonly repo?: any) {
-    console.log(repo)
     super();
   }
 
