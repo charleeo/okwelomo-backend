@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable, Res, Body, Request } from '@nestjs/common';
+import { HttpStatus, Injectable, Res, Body, Request, Req } from '@nestjs/common';
 
 import { responseStructure } from 'src/common/helpers/response.structure';
 
@@ -15,6 +15,7 @@ import {
 } from 'src/common/helpers/generals';
 
 import {
+  ApprovalStatus,
   DaysAndWeekAndMonths,
   InterestPaymentStatus,
 } from 'src/modules/entities/common.type';
@@ -27,6 +28,7 @@ import { LoanRepaymentDurationCategory } from 'src/modules/config/entities/loans
 import { LoanType } from 'src/modules/config/entities/loan.type.entity';
 import { BaseDataSource } from 'src/common/helpers/base.data.ource';
 import { instanceToPlain } from 'class-transformer';
+import { Loan } from '../../entities/loan.entity';
 
 @Injectable()
 export class ApplicationService extends BaseDataSource {
@@ -327,9 +329,21 @@ export class ApplicationService extends BaseDataSource {
     let statusCode: HttpStatus;
     let message = '';
     let responseData = null;
-    const loanData = await this.loanRepo.findOne({where:{id:dto.loan_id},
+
+    const loanData = await this.loanRepo.findOneOrFail({where:{id:dto.loan_id},
        relations:['loan_type','loan_duration_category'],
      })
+     
+     /**
+      * Soft delete the record for feature records keeping
+      */
+     if(dto.status === ApprovalStatus.decline){
+        await this.loanRepo.createQueryBuilder()
+              .softDelete()
+              .where('reference=:ref',{ref:loanData.reference})
+              .execute()
+     }
+
     const loanType = loanData.loan_type
     
 
@@ -394,5 +408,48 @@ export class ApplicationService extends BaseDataSource {
     }
       
     return { object: repaymentObject, amount: repaymentAmount };
+  }
+
+/**
+ * 
+ * @param reference 
+ * @param response 
+ * @param req 
+ * @returns any
+ */
+  public async deleteLoan(
+    reference,
+    @Res() response: Response,
+     @Req() req: Request,
+  ) {
+    let status = false;
+    let statusCode: HttpStatus;
+    let message = 'no data found';
+    let responseData = {};
+     const user = await this.getUser(req);
+
+    const loanData:Loan = await this.loanRepo.findOneByOrFail({reference, verification_status:ApprovalStatus.pending})
+
+    if(user.is_admin){
+    
+      await this.loanRepo.createQueryBuilder()
+      .softDelete()
+      .where('reference=:ref',{ref:loanData.reference})
+      .execute()
+      
+    }else {
+      await this.loanRepo.delete(loanData.id)
+    }
+
+    if(loanData){
+      statusCode = HttpStatus.CREATED;
+      status = true;
+      message = 'Loan repayment data updated';
+      responseData = loanData
+    }
+
+    return response
+      .status(statusCode)
+      .send(responseStructure(status, message, responseData, statusCode));
   }
 }

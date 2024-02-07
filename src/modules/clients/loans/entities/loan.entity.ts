@@ -15,6 +15,7 @@ import {
   OneToMany,
   ManyToOne,
   JoinColumn,
+  DeleteDateColumn,
 } from 'typeorm';
 import { LoanRepayment } from './loan.repayments.entity';
 
@@ -102,4 +103,7 @@ export class Loan {
   
   @UpdateDateColumn()
   updated_at: Date;
+
+   @DeleteDateColumn()
+  deletedAt:Date
 }

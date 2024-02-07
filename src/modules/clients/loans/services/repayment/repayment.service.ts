@@ -103,6 +103,7 @@ export class RepaymentService extends BaseDataSource {
 
     const repaymentDataCount = await this.getLoansByRefernce(loan.id);
     let sum_of_payments = 0;
+    
     if (repaymentDataCount) {
       repaymentDataCount.map((payment) => {
         const totalAmount = Number(payment.amount).toFixed(2);
@@ -217,6 +218,10 @@ export class RepaymentService extends BaseDataSource {
 
     if(user.is_admin){
       repaymentData.isDeleted = true
+      await this.loanRepaymentRepo.createQueryBuilder()
+      .softDelete()
+      .where('repayment_reference=:ref',{ref:repayment_reference})
+      .execute()
       await this.loanRepaymentRepo.save(repaymentData)
     }else {
       await this.loanRepaymentRepo.delete(repaymentData.id)
@@ -243,6 +248,5 @@ protected async repayment(repayment_reference): Promise<LoanRepayment> {
       { where: { repayment_reference }, relations: ['loan'] }
     );
   }
-
 
 }

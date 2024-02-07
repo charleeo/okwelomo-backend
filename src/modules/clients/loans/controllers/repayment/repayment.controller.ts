@@ -6,8 +6,7 @@ import {
   UseGuards,
   Request as NestRequest,
   Param,
-  Delete,
-  Req,
+
   Request,
 } from '@nestjs/common';
 import {  Response } from 'express';
