@@ -155,45 +155,6 @@ export class LoanDataService extends BaseDataSource {
     let message = '';
     let responseData: any = null;
     let statusCode: HttpStatus;
-   
-   
-    const approvedQb = await this.loanRepo.createQueryBuilder('loan')
-    .where('loan.verification_status=:status',{status:ApprovalStatus.verified})
-   
-    const declinedQb = await this.loanRepo.createQueryBuilder('loan')
-    .where('loan.verification_status=:status',{status:ApprovalStatus.decline})
-   
-    const pendingLoanQb = await this.loanRepo.createQueryBuilder('loan')
-    .where('loan.verification_status=:status',{status:ApprovalStatus.pending})
-   
-    const reviewedLoanQb = await this.loanRepo.createQueryBuilder('loan')
-    .where('loan.verification_status=:status',{status:ApprovalStatus.reviewed})
-
-    const sumOfApproved = await this.loanRepo.createQueryBuilder('loan')
-    .where('loan.verification_status=:status',{status:ApprovalStatus.verified})
-    .select('SUM(amount)','amount')
-    .addSelect('SUM(repayment_sum)','repayment_sum')
-    .addSelect('SUM(expected_repayment_amount)','expected_repayment_amount')
-
-    const sumOfPending = await this.loanRepo.createQueryBuilder('loan')
-    .where('loan.verification_status=:status',{status:ApprovalStatus.pending})
-    .select('SUM(amount)','amount')
-    .addSelect('SUM(repayment_sum)','repayment_sum')
-    .addSelect('SUM(expected_repayment_amount)','expected_repayment_amount')
-   
-    const sumOfDeclined = await this.loanRepo.createQueryBuilder('loan')
-    .where('loan.verification_status=:status',{status:ApprovalStatus.decline})
-    .select('SUM(amount)','amount')
-   
-    if(!user.is_admin){
-       approvedQb.andWhere('loan.customer_id=:customerId', {customerId:user.id})
-       declinedQb.andWhere('loan.customer_id=:customerId', {customerId:user.id})
-       pendingLoanQb.andWhere('loan.customer_id=:customerId', {customerId:user.id})
-       reviewedLoanQb.andWhere('loan.customer_id=:customerId', {customerId:user.id})
-       sumOfApproved.andWhere('loan.customer_id=:customerId', {customerId:user.id})
-       sumOfPending.andWhere('loan.customer_id=:customerId', {customerId:user.id})
-       sumOfDeclined.andWhere('loan.customer_id=:customerId', {customerId:user.id})
-    }
 
     const approvedOverdue = await this.loanRepo.find({
       where:this.dashboardCondition(user),
@@ -202,27 +163,30 @@ export class LoanDataService extends BaseDataSource {
 
     let overDue = 0;
     approvedOverdue.map( async(loan:Loan)=> {
-     overDue += parseFloat(calculatOverdue({
+
+     overDue += parseFloat(
+      calculatOverdue({
         loanType: loan.loan_type.type,
         repaymentStartDate: loan.repayment_start_date,
         repaymentRate: loan.repayment_rate,
         totalPaid:loan.repayment_sum
-      }))
+      })
+      )
       
     })
 
     statusCode = HttpStatus.OK;
     status = true;
     responseData = {
-      pending : (await pendingLoanQb.getCount()),
-      approved : (await approvedQb.getCount()),
-      reviewed : (await reviewedLoanQb.getCount()),
-      declined : (await declinedQb.getCount()),
-      sumOfApproved : (await sumOfApproved.getRawOne()),
-      sumOfDeclined : (await sumOfDeclined.getRawOne()),
+      pending : (await this.createQueryBuilder(user,ApprovalStatus.pending).getCount()),
+      approved : (await this.createQueryBuilder(user,ApprovalStatus.verified).getCount()),
+      reviewed : (await this.createQueryBuilder(user,ApprovalStatus.reviewed).getCount()),
+      declined : (await this.createQueryBuilder(user,ApprovalStatus.decline).getCount()),
+      sumOfApproved : (await this.createSumOfData(user,ApprovalStatus.verified).getRawOne()),
+      sumOfDeclined : (await this.createSumOfData(user,ApprovalStatus.decline).getRawOne()),
       overDue: overDue
     };
-    message ="Loan data fetched"
+    message ="Dashboard data fetched"
     return res
       .status(statusCode)
       .send(responseStructure(status, message, responseData, statusCode));
@@ -266,11 +230,11 @@ export class LoanDataService extends BaseDataSource {
     .andWhere('EXTRACT(YEAR FROM loan.issue_date) = :year', { year })
     
     if(!user.is_admin){
-     qb = qb .andWhere('loan.customer_id = :userId', { userId: user.id }) 
+        qb .andWhere('loan.customer_id = :userId', { userId: user.id }) 
     }
    const result =  await qb.groupBy('month')
-    .orderBy('month') // Ensure the months are in order
-    .getRawMany();
+                  .orderBy('month') // Ensure the months are in order
+                  .getRawMany();
 
     const monthlyData: { [key: string]: number } = {};
     for (let i = 1; i <= 12; i++) {
@@ -280,7 +244,53 @@ export class LoanDataService extends BaseDataSource {
     return monthlyData;
   }
 
+  /**
+   * 
+   * @param user 
+   * @param status 
+   * @returns 
+   */
+  protected createQueryBuilder(user?:Users, status?:any)
+  {
+    let qb =  this.loanRepo.createQueryBuilder('loan')
+    .where('loan.verification_status=:status',{status})
+   
+    if(!user.is_admin){
+      qb .andWhere('loan.customer_id = :userId', { userId: user.id }) 
+    }
+    return qb
+  }
 
+
+  /**
+   * 
+   * @param user 
+   * @param status 
+   * @returns 
+   */
+  protected  createSumOfData(user?:Users, status?:any)
+  {
+    let sumQb =null
+    if(status && status === ApprovalStatus.decline){
+    sumQb =  this.loanRepo.createQueryBuilder('loan')
+    .withDeleted()
+    .where('loan.verification_status=:status',{status})
+    .select('SUM(amount)','amount')
+    }else{
+
+    sumQb =  this.loanRepo.createQueryBuilder('loan')
+    .where('loan.verification_status=:status',{status})
+    .select('SUM(amount)','amount')
+    .addSelect('SUM(repayment_sum)','repayment_sum')
+    .addSelect('SUM(expected_repayment_amount)','expected_repayment_amount')
+    }
+
+    if(!user.is_admin){
+      sumQb .andWhere('loan.customer_id = :userId', { userId: user.id }) 
+    }
+
+    return sumQb
+  }
 }
 
 

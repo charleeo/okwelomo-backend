@@ -26,7 +26,6 @@ export enum VerificationEnums {
 }
 export enum ApprovalStatus {
   verified = 'approved',
-  no = 'not_approved',
   pending = 'pending',
   reviewed = 'reviewed',
   decline = 'declined',
