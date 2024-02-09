@@ -4,7 +4,7 @@ import { HttpStatus, Injectable, Query, Req, Res } from '@nestjs/common';
 import { Loan } from '../../entities/loan.entity';
 import { LoanRepository } from '../../repositories/loan.repository';
 import { BaseDataSource } from 'src/common/helpers/base.data.ource';
-import { ApprovalStatus, RepaymentStatus } from 'src/modules/entities/common.type';
+import { ApprovalStatus, DaysAndWeekAndMonths, RepaymentStatus } from 'src/modules/entities/common.type';
 import { Users } from 'src/modules/user/entities/user.entity';
 import { LessThanOrEqual, MoreThanOrEqual } from 'typeorm';
 import { calculatOverdue, getMonthName } from 'src/common/helpers/generals';
@@ -209,8 +209,26 @@ export class LoanDataService extends BaseDataSource {
     const year:number = query.year
     statusCode = HttpStatus.OK;
     const  status = true;
-    responseData.approved = await this.getData(ApprovalStatus.verified, year, user)
-    responseData.pending = await this.getData(ApprovalStatus.pending, year, user)
+    const sumOfData  = await this.getData(ApprovalStatus.verified, year, user)
+
+    const dailyLoanType = await this.loanTypeRepo.findOne({where:{type: DaysAndWeekAndMonths.DAILY}})
+
+    const weeklyLoanType = await this.loanTypeRepo.findOne({where:{type: DaysAndWeekAndMonths.WEEKLY}})
+
+    const monthlyLoanType = await this.loanTypeRepo.findOne({where:{type: DaysAndWeekAndMonths.MONTHLY}})
+
+    const yearlyLoanType = await this.loanTypeRepo.findOne({where:{type: DaysAndWeekAndMonths.YEARLY}})
+
+    const dailyLoanCounts = await this.getCountForLoanTypes(user, dailyLoanType.id,year).getCount()
+
+    const weeklyLoanCounts = await this.getCountForLoanTypes(user, weeklyLoanType.id, year ).getCount()
+    const monthlyLoanCounts = await this.getCountForLoanTypes(user, monthlyLoanType.id, year ).getCount()
+    const yearlyLoanCounts = await this.getCountForLoanTypes(user, yearlyLoanType.id,year ).getCount()
+    const countArrays = [dailyLoanCounts, weeklyLoanCounts, monthlyLoanCounts, yearlyLoanCounts]
+
+    responseData.approved = sumOfData.approved
+    responseData.repaid = sumOfData.totalRepaid
+    responseData.countArray = countArrays
    
     return res
       .status(statusCode)
@@ -225,23 +243,28 @@ export class LoanDataService extends BaseDataSource {
   public async getData(status: string, year: number = new Date().getFullYear(), user: Users): Promise<any> {
     let qb =  this.loanRepo.createQueryBuilder('loan')
     .select('EXTRACT(MONTH FROM loan.issue_date) as month')
-    .addSelect('COALESCE(SUM(loan.expected_repayment_amount), 0)', 'sumAmount') // COALESCE handles NULL sums and returns 0 instead
+    .addSelect('COALESCE(SUM(loan.expected_repayment_amount), 0)', 'sumAmount', ) // COALESCE handles NULL sums and returns 0 instead
+    .addSelect('COALESCE(SUM(loan.repayment_sum), 0)', 'repaymentSum') // COALESCE handles NULL sums and returns 0 instead
     .where('loan.verification_status = :status', { status })
     .andWhere('EXTRACT(YEAR FROM loan.issue_date) = :year', { year })
     
     if(!user.is_admin){
-        qb .andWhere('loan.customer_id = :userId', { userId: user.id }) 
+        qb.andWhere('loan.customer_id = :userId', { userId: user.id }) 
     }
+    
    const result =  await qb.groupBy('month')
                   .orderBy('month') // Ensure the months are in order
                   .getRawMany();
-
-    const monthlyData: { [key: string]: number } = {};
+    const approved: { [key: string]: number } = {};
+    const totalRepaid: { [key: string]: number } = {};
+   
     for (let i = 1; i <= 12; i++) {
       const monthData = result.find(item => parseInt(item.month) === i);
-      monthlyData[getMonthName(i)] = monthData ? parseFloat(monthData.sumAmount) : 0;
+      approved[getMonthName(i)] = monthData ? parseFloat(monthData.sumAmount) : 0;
+      totalRepaid[getMonthName(i)] = monthData ? parseFloat(monthData.repaymentSum) : 0;
     }
-    return monthlyData;
+
+    return {approved, totalRepaid};
   }
 
   /**
@@ -254,6 +277,27 @@ export class LoanDataService extends BaseDataSource {
   {
     let qb =  this.loanRepo.createQueryBuilder('loan')
     .where('loan.verification_status=:status',{status})
+   
+    if(!user.is_admin){
+      qb .andWhere('loan.customer_id = :userId', { userId: user.id }) 
+    }
+    return qb
+  }
+
+
+  /**
+   * 
+   * @param user 
+   * @param status 
+   * @returns 
+   */
+  protected getCountForLoanTypes(user?:Users,  loanType?:number, year:number = new Date().getFullYear())
+  {
+    let qb =  this.loanRepo.createQueryBuilder('loan')
+    .where('loan.verification_status=:status',{status:ApprovalStatus.verified})
+    .andWhere('loan.loan_type=:loanType',{loanType})
+    .andWhere('EXTRACT(YEAR FROM loan.issue_date) = :year', { year })
+
    
     if(!user.is_admin){
       qb .andWhere('loan.customer_id = :userId', { userId: user.id }) 
