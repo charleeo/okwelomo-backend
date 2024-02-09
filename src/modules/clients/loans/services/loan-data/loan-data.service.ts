@@ -1,16 +1,13 @@
 import { Request, Response } from 'express';
 import { responseStructure } from 'src/common/helpers/response.structure';
-
 import { HttpStatus, Injectable, Query, Req, Res } from '@nestjs/common';
-
 import { Loan } from '../../entities/loan.entity';
 import { LoanRepository } from '../../repositories/loan.repository';
 import { BaseDataSource } from 'src/common/helpers/base.data.ource';
 import { ApprovalStatus, RepaymentStatus } from 'src/modules/entities/common.type';
 import { Users } from 'src/modules/user/entities/user.entity';
 import { LessThanOrEqual, MoreThanOrEqual } from 'typeorm';
-import { calculatOverdue } from 'src/common/helpers/generals';
-import { instanceToPlain } from 'class-transformer';
+import { calculatOverdue, getMonthName } from 'src/common/helpers/generals';
 import { LoanTypeRepository } from 'src/modules/config/repository/loan.type.repository';
 
 @Injectable()
@@ -33,8 +30,6 @@ export class LoanDataService extends BaseDataSource {
       .getOne();
     return loanData;
   }
-
-
 
   /**
    * Get all the loans associated to this user and also be able to filter by some conditions
@@ -155,8 +150,7 @@ export class LoanDataService extends BaseDataSource {
  * @param req 
  * @returns Promise
  */
-   public async dashboardData(user: any, @Res() res: Response,@Query() query: any, @Req() req: Request): Promise<any> {
-   
+   public async dashboardData(user: any, @Res() res: Response): Promise<any> {
     let status = false;
     let message = '';
     let responseData: any = null;
@@ -205,6 +199,7 @@ export class LoanDataService extends BaseDataSource {
       where:this.dashboardCondition(user),
       relations:['loan_type']
     })
+
     let overDue = 0;
     approvedOverdue.map( async(loan:Loan)=> {
      overDue += parseFloat(calculatOverdue({
@@ -232,4 +227,60 @@ export class LoanDataService extends BaseDataSource {
       .status(statusCode)
       .send(responseStructure(status, message, responseData, statusCode));
   }
+
+
+/**
+ * 
+ * @param user 
+ * @param res 
+ * @param query 
+ * @param req 
+ * @returns Promise
+ */
+   public async chartsData(user: any, @Res() res: Response,@Query() query: any): Promise<any> {
+   
+    let message = '';
+    let responseData: any = {};
+    let statusCode: HttpStatus;
+    const year:number = query.year
+    statusCode = HttpStatus.OK;
+    const  status = true;
+    responseData.approved = await this.getData(ApprovalStatus.verified, year, user)
+    responseData.pending = await this.getData(ApprovalStatus.pending, year, user)
+   
+    return res
+      .status(statusCode)
+      .send(responseStructure(status, message, responseData, statusCode));
+  }
+
+  /**
+   * Extract data for each month of a given year
+   * @param status 
+   * @param year 
+   */
+  public async getData(status: string, year: number = new Date().getFullYear(), user: Users): Promise<any> {
+    let qb =  this.loanRepo.createQueryBuilder('loan')
+    .select('EXTRACT(MONTH FROM loan.issue_date) as month')
+    .addSelect('COALESCE(SUM(loan.expected_repayment_amount), 0)', 'sumAmount') // COALESCE handles NULL sums and returns 0 instead
+    .where('loan.verification_status = :status', { status })
+    .andWhere('EXTRACT(YEAR FROM loan.issue_date) = :year', { year })
+    
+    if(!user.is_admin){
+     qb = qb .andWhere('loan.customer_id = :userId', { userId: user.id }) 
+    }
+   const result =  await qb.groupBy('month')
+    .orderBy('month') // Ensure the months are in order
+    .getRawMany();
+
+    const monthlyData: { [key: string]: number } = {};
+    for (let i = 1; i <= 12; i++) {
+      const monthData = result.find(item => parseInt(item.month) === i);
+      monthlyData[getMonthName(i)] = monthData ? parseFloat(monthData.sumAmount) : 0;
+    }
+    return monthlyData;
+  }
+
+
 }
+
+

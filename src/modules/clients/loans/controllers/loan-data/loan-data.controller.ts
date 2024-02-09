@@ -18,6 +18,11 @@ export class LoanDataController {
 
   @Get('counts')
   async loansCount(@Req() user: any, @Res() res: Response, @Query() query:any, @Req() req: Request): Promise<any> {
-    return await this.loanDataService.dashboardData(user.user, res,query,req);
+    return await this.loanDataService.dashboardData(user.user, res);
+  }
+
+  @Get('charts/data')
+  async chartsData(@Req() user: any, @Res() res: Response, @Query() query:any): Promise<any> {
+    return await this.loanDataService.chartsData(user.user, res,query);
   }
 }

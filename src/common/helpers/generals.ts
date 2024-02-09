@@ -259,9 +259,7 @@ export function fullDateWithoutTime() {
     )
   {
     let overDue:any=0
-    console.log(repaymentStartDate)
     if(new Date(repaymentStartDate).getTime() < new Date().getTime()){
-      console.log("We got here now")
         if(loanType == DAILY){
             overDue =calculatDailyOverdue(repaymentStartDate,repaymentRate,totalPaid)
         }else if(loanType == WEEKLY){
@@ -281,6 +279,29 @@ export function fullDateWithoutTime() {
     repaymentRate:number
     totalPaid:number
   }
+
+  export function getMonthName(month: number): string | null {
+  const months = [
+    'January', 'February', 'March', 'April', 'May', 'June', 'July',
+    'August', 'September', 'October', 'November', 'December'
+  ];
+  return months[month -1]
+ 
+}
+
+export function test()
+{
+  // Generate an array with 12 objects, one for each month, including empty sums
+  // const monthlyData: { month: string; sumAmount: number }[] = [];
+  // for (let i = 1; i <= 12; i++) {
+  //   const monthData = result.find(item => parseInt(item.month) === i);
+  //   monthlyData.push({
+  //     month: getMonthName(i),
+  //     sumAmount: monthData ? parseFloat(monthData.sumAmount) : 0,
+  //   });
+  // }
+}
+
 
 
 
