@@ -6,7 +6,7 @@ import { LoanRepository } from '../../repositories/loan.repository';
 import { BaseDataSource } from 'src/common/helpers/base.data.ource';
 import { ApprovalStatus, DaysAndWeekAndMonths, RepaymentStatus } from 'src/modules/entities/common.type';
 import { Users } from 'src/modules/user/entities/user.entity';
-import { LessThanOrEqual, MoreThanOrEqual } from 'typeorm';
+import { Between, LessThanOrEqual, MoreThanOrEqual } from 'typeorm';
 import { calculatOverdue, getMonthName } from 'src/common/helpers/generals';
 import { LoanTypeRepository } from 'src/modules/config/repository/loan.type.repository';
 
@@ -131,10 +131,14 @@ export class LoanDataService extends BaseDataSource {
     return condition
   }
 
-  protected dashboardCondition(user:Users)
+  protected dashboardCondition(user:Users, year:number = new Date().getFullYear())
   {
-    let condition : any ={}
+    const yearStart = new Date(year, 0, 1); // January 1st of the specified year
+    const yearEnd = new Date(year, 11, 31, 23, 59, 59); // December 31st of the specified year
+
+    let condition : any = {}
     condition.verification_status = ApprovalStatus.verified
+    condition.issue_date = Between(yearStart, yearEnd)
 
      if(!user.is_admin){
       condition.customer_id = user.id
@@ -150,19 +154,20 @@ export class LoanDataService extends BaseDataSource {
  * @param req 
  * @returns Promise
  */
-   public async dashboardData(user: any, @Res() res: Response): Promise<any> {
+   public async dashboardData(user: any, @Res() res: Response, @Query() query: any): Promise<any> {
     let status = false;
     let message = '';
     let responseData: any = null;
     let statusCode: HttpStatus;
-
-    const approvedOverdue = await this.loanRepo.find({
-      where:this.dashboardCondition(user),
-      relations:['loan_type']
-    })
+    const year = query.year
+    let approvedOverdue = await this.loanRepo.createQueryBuilder('loan')
+     .leftJoinAndSelect('loan.loan_type', 'loan_type')
+     .where('loan.verification_status=:status',{status: ApprovalStatus.verified})
+    . andWhere('EXTRACT(YEAR FROM loan.issue_date) = :year', { year })
+     .getMany()
 
     let overDue = 0;
-    approvedOverdue.map( async(loan:Loan)=> {
+    approvedOverdue.map( async(loan:Loan) => {
 
      overDue += parseFloat(
       calculatOverdue({
@@ -178,12 +183,12 @@ export class LoanDataService extends BaseDataSource {
     statusCode = HttpStatus.OK;
     status = true;
     responseData = {
-      pending : (await this.createQueryBuilder(user,ApprovalStatus.pending).getCount()),
-      approved : (await this.createQueryBuilder(user,ApprovalStatus.verified).getCount()),
-      reviewed : (await this.createQueryBuilder(user,ApprovalStatus.reviewed).getCount()),
-      declined : (await this.createQueryBuilder(user,ApprovalStatus.decline).getCount()),
-      sumOfApproved : (await this.createSumOfData(user,ApprovalStatus.verified).getRawOne()),
-      sumOfDeclined : (await this.createSumOfData(user,ApprovalStatus.decline).getRawOne()),
+      pending : (await this.createQueryBuilder(user,ApprovalStatus.pending, year).getCount()),
+      approved : (await this.createQueryBuilder(user,ApprovalStatus.verified, year).getCount()),
+      reviewed : (await this.createQueryBuilder(user,ApprovalStatus.reviewed, year).getCount()),
+      declined : (await this.createQueryBuilder(user,ApprovalStatus.decline, year).getCount()),
+      sumOfApproved : (await this.createSumOfData(user,ApprovalStatus.verified, year).getRawOne()),
+      sumOfDeclined : (await this.createSumOfData(user,ApprovalStatus.decline, year).getRawOne()),
       overDue: overDue
     };
     message ="Dashboard data fetched"
@@ -273,10 +278,11 @@ export class LoanDataService extends BaseDataSource {
    * @param status 
    * @returns 
    */
-  protected createQueryBuilder(user?:Users, status?:any)
+  protected createQueryBuilder(user?:Users, status?:any, year:number = new Date().getFullYear())
   {
     let qb =  this.loanRepo.createQueryBuilder('loan')
     .where('loan.verification_status=:status',{status})
+    .andWhere('EXTRACT(YEAR FROM loan.issue_date) = :year', { year })
    
     if(!user.is_admin){
       qb .andWhere('loan.customer_id = :userId', { userId: user.id }) 
@@ -298,7 +304,6 @@ export class LoanDataService extends BaseDataSource {
     .andWhere('loan.loan_type=:loanType',{loanType})
     .andWhere('EXTRACT(YEAR FROM loan.issue_date) = :year', { year })
 
-   
     if(!user.is_admin){
       qb .andWhere('loan.customer_id = :userId', { userId: user.id }) 
     }
@@ -312,18 +317,20 @@ export class LoanDataService extends BaseDataSource {
    * @param status 
    * @returns 
    */
-  protected  createSumOfData(user?:Users, status?:any)
+  protected  createSumOfData(user?:Users, status?:any,year:number = new Date().getFullYear())
   {
     let sumQb =null
     if(status && status === ApprovalStatus.decline){
     sumQb =  this.loanRepo.createQueryBuilder('loan')
     .withDeleted()
     .where('loan.verification_status=:status',{status})
+    .andWhere('EXTRACT(YEAR FROM loan.issue_date) = :year', { year })
     .select('SUM(amount)','amount')
     }else{
 
     sumQb =  this.loanRepo.createQueryBuilder('loan')
     .where('loan.verification_status=:status',{status})
+    .andWhere('EXTRACT(YEAR FROM loan.issue_date) = :year', { year })
     .select('SUM(amount)','amount')
     .addSelect('SUM(repayment_sum)','repayment_sum')
     .addSelect('SUM(expected_repayment_amount)','expected_repayment_amount')
