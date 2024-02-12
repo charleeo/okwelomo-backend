@@ -3,6 +3,7 @@ import { IsNotEmpty, IsOptional, IsString, Length } from 'class-validator';
 export class LoanSettingDTO {
   @IsNotEmpty()
   @IsString()
+  @Length(6,6)
   // @Matches(
   //   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?#&^<>])[A-Za-z\d@$!%*?#&^<>]{6,}$/,
   //   {

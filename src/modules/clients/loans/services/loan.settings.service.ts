@@ -11,6 +11,8 @@ import { LoanSettingDTO } from '../dto/loan.setting.dto';
 import { LoanSettingVerifyPasswordDTO } from '../dto/loan.setting.verify-password.dto';
 import { LoanSetting } from '../entities/loan.settings.entity';
 import { LoanSettingRepository } from '../repositories/loan.setting.repository';
+import { LoanSettingUpdateDTO } from '../dto/loan.setting.update.dto';
+import { LoanSettingUpdatePasswordDTO } from '../dto/loan.setting.update-password.dto';
 
 @Injectable()
 export class LoanSettingService extends ConfigHelperService {
@@ -23,6 +25,31 @@ export class LoanSettingService extends ConfigHelperService {
   }
 
   async configure(
+    dto: LoanSettingDTO,
+    @Res() response: Response,
+    @Request() req: Request,
+  ): Promise<any> {
+    let status = false;
+    let statusCode: HttpStatus;
+    let message = '';
+    let responseData = null;
+    const user = await this.getUser(req);
+    const config = await this.findOne(user.id);
+    if (config) {
+      responseData = await this.update(req, dto);
+      message = 'Configuration updated';
+    } else {
+      responseData = await this.create(req, dto);
+      message = 'Configuration created';
+    }
+    statusCode = HttpStatus.CREATED;
+    status = true;
+    return response
+      .status(statusCode)
+      .send(responseStructure(status, message, responseData, statusCode));
+  }
+
+  async configure2(
     dto: LoanSettingDTO,
     @Res() response: Response,
     @Request() req: Request,
@@ -84,18 +111,27 @@ export class LoanSettingService extends ConfigHelperService {
    * @param dto LoanSettingDTO
    * @returns LoanSetting
    */
-  async update(req: Request, dto: LoanSettingDTO): Promise<LoanSetting> {
-    const user = await this.getUser(req);
+  async update(req: Request, dto: LoanSettingUpdateDTO): Promise<LoanSetting> {
+    const user = await this.getUser(req)
+    const updateObject ={}
+    
+    if(dto.default_loan_type != null && dto.default_loan_type.toString() != ''){
+      updateObject['default_loan_type'] = dto.default_loan_type
+    }
+    if(dto.receiving_account != null && dto.receiving_account.toString() !=''){
+      updateObject['receiving_account'] = dto.receiving_account
+    }
 
-    await this.loanSettingRepo.update(
-      { client_id: user.id },
-      {
-        application_password: await bcrypt.hash(dto.password, 10),
-        default_loan_type: dto.default_loan_type,
-        receiving_account: dto.receiving_account,
-        receiving_bank: dto.receiving_bank,
-      },
-    );
+    if(dto.receiving_bank !== null && dto.receiving_bank.toString() !=''){
+      updateObject['receiving_bank'] = dto.receiving_bank
+    }
+
+    if(dto.password !== null && dto.password !=''){
+      updateObject['password'] = bcrypt.hash(dto.password,10)
+    }
+
+    await this.loanSettingRepo.update({ client_id: user.id }, updateObject)
+
     return await this.findOne(user.id);
   }
 
@@ -132,6 +168,7 @@ export class LoanSettingService extends ConfigHelperService {
       .send(responseStructure(status, message, responseData, statusCode));
   }
 
+
   async verifyPassword(
     @Res() response: Response,
     @Param() params,
@@ -162,4 +199,35 @@ export class LoanSettingService extends ConfigHelperService {
       .status(statusCode)
       .send(responseStructure(status, message, responseData, statusCode));
   }
+
+  async changePassword(
+    @Res() response: Response,
+    @Param() params,
+    dto: LoanSettingUpdatePasswordDTO,
+  ): Promise<any> {
+    let status = false;
+    let message = '';
+    const responseData: object = null;
+    let statusCode: HttpStatus;
+    const configId = params.id;
+    const config: LoanSetting = await this.loanSettingRepo.findOneBy({id:configId});
+    const password = await bcrypt.hash(dto.password,10)
+     const updated = await this.loanSettingRepo.update({ id: config.id }, {application_password:password})
+
+    if (updated) {
+      message = 'Application password updated';
+      status = true;
+      statusCode = HttpStatus.OK;
+    } else {
+      message = 'Wrong application password';
+      statusCode = HttpStatus.BAD_REQUEST;
+    }
+
+    return response
+      .status(statusCode)
+      .send(responseStructure(status, message, responseData, statusCode));
+  }
+
+
 }
+
