@@ -51,13 +51,14 @@ export class AuthService {
   }
 
   public async login(req, res) {
-    let status: boolean;
+    let status: boolean =false;
     let message = '';
     let code = 200;
     let responseData = null;
+    const remember = req.remember
     const user = await this.userService.findOneByEmail(req.email);
     const { token, refreshToken } = await this.generateToken(
-      instanceToPlain(user),
+      instanceToPlain(user), remember
     );
     if (token) {
       status = true;
@@ -125,8 +126,11 @@ export class AuthService {
       );
   }
 
-  private async generateToken(user) {
-    const token = await this.jwtService.sign(user);
+  private async generateToken(user,remember?) {
+     const token = remember? await this.jwtService.sign(user,{expiresIn:'2days'})
+     :
+     await this.jwtService.sign(user)
+     
     const refreshToken = await this.jwtService.sign(user, {
       expiresIn: process.env.REFRESHTOKEN_EXPIRATION,
     });
