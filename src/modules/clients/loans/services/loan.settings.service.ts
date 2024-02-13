@@ -187,11 +187,11 @@ export class LoanSettingService extends ConfigHelperService {
       config.application_password,
     );
     if (match) {
-      message = 'Application password matched';
+      message = 'Password verified';
       status = true;
       statusCode = HttpStatus.OK;
     } else {
-      message = 'Wrong application password';
+      message = 'Wrong password';
       statusCode = HttpStatus.BAD_REQUEST;
     }
 

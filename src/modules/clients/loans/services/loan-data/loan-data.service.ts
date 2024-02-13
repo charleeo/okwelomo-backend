@@ -160,11 +160,15 @@ export class LoanDataService extends BaseDataSource {
     let responseData: any = null;
     let statusCode: HttpStatus;
     const year = query.year
-    let approvedOverdue = await this.loanRepo.createQueryBuilder('loan')
+    let qb =  this.loanRepo.createQueryBuilder('loan')
      .leftJoinAndSelect('loan.loan_type', 'loan_type')
      .where('loan.verification_status=:status',{status: ApprovalStatus.verified})
     . andWhere('EXTRACT(YEAR FROM loan.issue_date) = :year', { year })
-     .getMany()
+
+    if(!user.is_admin){
+      qb.andWhere('loan.customer_id=:userId',{userId:user.id})
+    }
+    const approvedOverdue = await qb.getMany()
 
     let overDue = 0;
     approvedOverdue.map( async(loan:Loan) => {

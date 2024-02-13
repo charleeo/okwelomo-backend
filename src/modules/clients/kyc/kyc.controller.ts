@@ -56,6 +56,11 @@ export class KycController {
     return await this.kcyService.show(res, param);
   }
 
+  @Get(':id/user')
+  async getKycByClientId(@Res() res: Response, @Param() param: any): Promise<any> {
+    return await this.kcyService.getKycByClientId(res, param);
+  }
+
   @Delete(':id')
   async delete(@Res() res: Response, @Param() param: any): Promise<KYC> {
     return await this.kcyService.destroy(res, param);

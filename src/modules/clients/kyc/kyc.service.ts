@@ -132,23 +132,39 @@ export class KycService extends BaseDataSource {
     let responseData: object = null;
     let statusCode: HttpStatus;
 
-    try {
-      const kycId = params.id;
-      responseData = await this.kycRepo.findOne({
-        where: { id: kycId },
-        relations: { user: true },
-      });
+    const kycId = params.id;
+    responseData = await this.kycRepo.findOne({
+      where: { id: kycId },
+      relations: { user: true },
+    });
 
-      if (responseData) {
-        message = 'KYC data found';
-        status = true;
-      } else message = 'No kyc found';
-      statusCode = HttpStatus.OK;
-    } catch (e) {
-      message = 'there was an error. please try again';
-      statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
-      logErrors(e.message);
-    }
+    if (responseData) {
+      message = 'KYC data found';
+      status = true;
+    } else message = 'No kyc found';
+    statusCode = HttpStatus.OK;
+
+    return response
+      .status(statusCode)
+      .send(responseStructure(status, message, responseData, statusCode));
+  }
+
+  async getKycByClientId(@Res() response: Response, @Param() params): Promise<any> {
+    let status = false;
+    let message = '';
+    let responseData: object = null;
+    let statusCode: HttpStatus;
+    const kycId = params.id;
+    responseData = await this.kycRepo.findOne({
+      where: {user_id: kycId },
+      relations: { user: true },
+    });
+
+    if (responseData) {
+      message = 'KYC data found';
+      status = true;
+    } else message = 'No kyc found';
+    statusCode = HttpStatus.OK;
 
     return response
       .status(statusCode)
