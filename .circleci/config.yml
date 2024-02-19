@@ -39,6 +39,7 @@ jobs:
 workflows:
   version: 2
   build_and_deploy:
+    branches: dev
     jobs:
       - build_infrastructure
       - deploy_nestjs:
