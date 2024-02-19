@@ -86,6 +86,7 @@ export class ApplicationService extends BaseDataSource {
       repayment_counts,
       repaymentAmount,
     );
+
     const repaymentObject = interestPaymentCheck.object;
     repaymentAmount = interestPaymentCheck.amount;
     let loanRepaymentTotal = parseFloat(amount)
@@ -118,6 +119,8 @@ export class ApplicationService extends BaseDataSource {
       .status(statusCode)
       .send(responseStructure(status, message, responseData, statusCode));
   }
+
+  
 
   /**
    * @param amount
@@ -174,9 +177,8 @@ export class ApplicationService extends BaseDataSource {
   protected dailyLoansFormating(dto): any {
     const amount = dto.amount;
 
-    const grantedDate =fullDateWithoutTime();
-    const repaymentCommencementDate: Date =
-      setPaymentCommencementDateDaily(grantedDate);
+    const grantedDate = fullDateWithoutTime();
+    const repaymentCommencementDate: Date = setPaymentCommencementDateDaily(grantedDate);
 
     const repaymentAmount: number = this.calCulateDailyRepaymentPlan(amount);
     
@@ -245,14 +247,13 @@ export class ApplicationService extends BaseDataSource {
   ): any {
     const amount = dto.amount;
 
-    const grantedDate =fullDateWithoutTime();
+    const grantedDate = fullDateWithoutTime();
 
     const interest: number = this.calculateInterest(amount, 18);
 
     const repaymentDuration = this.getRepaymentDurationLoanPlan(repaymentCat);
 
-    const repaymentCommencementDate: Date =
-      setPaymentCommencementDateWekly(new Date(grantedDate));
+    const repaymentCommencementDate: Date = setPaymentCommencementDateWekly(new Date(grantedDate));
 
     const repaymentAmount: number = this.calculateWeeklyRepaymentPlan(
       amount,
@@ -284,13 +285,12 @@ export class ApplicationService extends BaseDataSource {
     loanDurationPlan: LoanRepaymentDurationCategory,
   ): Promise<any> {
     const type = loanType.type;
+   
     if (type === DaysAndWeekAndMonths.DAILY) {
-      console.log(dto)
       return this.dailyLoansFormating(dto);
     } else if (type === DaysAndWeekAndMonths.WEEKLY) {
       return this.weeklyLoansFormating(dto, loanDurationPlan);
     }
-
     return this.monthlyLoansFormating(dto, loanDurationPlan);
   }
 
