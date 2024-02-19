@@ -4,21 +4,20 @@ jobs:
   build_infrastructure:
     docker:
       - image: hashicorp/terraform:1.0.0
-    steps:
-      - checkout
-      - run:
-          name: Initialize Terraform
-          command: terraform init
-      - run:
-          name: Apply Terraform Changes
-          command: terraform apply -auto-approve
-      - persist_to_workspace:
-          root: .
-          paths: .
-
-  - deploy_nestjs:
-      docker:
-        - image: node:14
+      steps:
+        - checkout
+        - run:
+            name: Initialize Terraform
+            command: terraform init
+        - run:
+            name: Apply Terraform Changes
+            command: terraform apply -auto-approve
+        - persist_to_workspace:
+            root: .
+            paths: .
+  deploy_nestjs:
+    docker:
+      - image: node:14
       steps:
         - attach_workspace:
             at: /app
