@@ -37,12 +37,13 @@ export class KycController {
     return await this.kcyService.create(kyc, user, res);
   }
 
-  @Post('update/status')
+  @Put(':id/update/status')
   async updateKYCStatus(
     @Body() kyc: VerifyKYCDTO,
     @Res() res: Response,
+    @Param() param: any,
   ): Promise<any> {
-    return await this.kcyService.updateKYCStatus(kyc, res);
+    return await this.kcyService.updateKYCStatus(kyc, res, param);
   }
 
   @Get('all')
@@ -53,6 +54,11 @@ export class KycController {
   @Get(':id')
   async show(@Res() res: Response, @Param() param: any): Promise<any> {
     return await this.kcyService.show(res, param);
+  }
+
+  @Get(':id/user')
+  async getKycByClientId(@Res() res: Response, @Param() param: any): Promise<any> {
+    return await this.kcyService.getKycByClientId(res, param);
   }
 
   @Delete(':id')
@@ -69,12 +75,12 @@ export class KycController {
     return await this.kcyService.updateKYC(kyc, res, params);
   }
 
-  @Put(':id/profile')
+  @Put(':id/id_card')
   async uploadKYCProfile(
     @Req() req,
     @Res() res: Response,
     @Param() params,
   ): Promise<KYC> {
-    return await this.kcyService.uploadKYCProfile(req, res, params);
+    return await this.kcyService.uploadKYCIDCard(req, res, params);
   }
 }

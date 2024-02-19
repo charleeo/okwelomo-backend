@@ -1,19 +1,26 @@
-import { HttpStatus, Injectable, Res, Query, Param, Req } from '@nestjs/common';
 import { IsNumber } from 'class-validator';
-import { KYCRepository } from './repositories/kyc.repository';
-import { CreateKYCDTO } from './dto/create.dto';
-import { KYC } from './entities/kyc.entity';
-import { Users } from 'src/modules/user/entities/user.entity';
+import { Response } from 'express';
+import { paginate } from 'nestjs-typeorm-paginate';
+import { BaseDataSource } from 'src/common/helpers/base.data.ource';
 import { logErrors } from 'src/common/helpers/logging';
 import { responseStructure } from 'src/common/helpers/response.structure';
-import { Response, query } from 'express';
-import { Pagination, paginate } from 'nestjs-typeorm-paginate';
-
-import { VerifyKYCDTO } from './dto/verify.dto';
 import { VerificationEnums } from 'src/modules/entities/common.type';
-import { FileUploadService } from 'src/modules/config/services/file.upload.service';
+import { Users } from 'src/modules/user/entities/user.entity';
+
+import {
+  HttpStatus,
+  Injectable,
+  Param,
+  Query,
+  Req,
+  Res,
+} from '@nestjs/common';
+
+import { CreateKYCDTO } from './dto/create.dto';
 import { UpdateKYCDTO } from './dto/update.dto';
-import { BaseDataSource } from 'src/common/helpers/base.data.ource';
+import { VerifyKYCDTO } from './dto/verify.dto';
+import { KYC } from './entities/kyc.entity';
+import { KYCRepository } from './repositories/kyc.repository';
 
 @Injectable()
 export class KycService extends BaseDataSource {
@@ -91,23 +98,16 @@ export class KycService extends BaseDataSource {
     let responseData = null;
     let statusCode: HttpStatus;
     try {
-      const qb = await this.kycRepo
+      const qb =  this.kycRepo
         .createQueryBuilder('kyc')
         .leftJoinAndSelect('kyc.user', 'user');
       qb.orderBy('kyc.id', 'DESC');
 
-      const pageQuery = query.page;
-      const limit = query.per_page;
-
-      const page =
-        pageQuery && IsNumber(pageQuery) && pageQuery > 0 ? pageQuery : 1;
-      const per_page = limit && IsNumber(limit) && limit > 0 ? limit : 20;
-
-      responseData = await paginate<KYC>(qb, {
-        page,
-        limit: per_page,
-        route: process.env.APP_URL + 'kyc/all',
-      });
+      responseData = await this.paginate<KYC>(
+        qb,
+        query,
+        process.env.APP_URL + 'kyc/all'
+      );
 
       if (responseData['items'].length > 0) {
         message = 'Data found';
@@ -132,23 +132,39 @@ export class KycService extends BaseDataSource {
     let responseData: object = null;
     let statusCode: HttpStatus;
 
-    try {
-      const kycId = params.id;
-      responseData = await this.kycRepo.findOne({
-        where: { id: kycId },
-        relations: { user: true },
-      });
+    const kycId = params.id;
+    responseData = await this.kycRepo.findOne({
+      where: { id: kycId },
+      relations: { user: true },
+    });
 
-      if (responseData) {
-        message = 'KYC data found';
-        status = true;
-      } else message = 'No kyc found';
-      statusCode = HttpStatus.OK;
-    } catch (e) {
-      message = 'there was an error. please try again';
-      statusCode = HttpStatus.INTERNAL_SERVER_ERROR;
-      logErrors(e.message);
-    }
+    if (responseData) {
+      message = 'KYC data found';
+      status = true;
+    } else message = 'No kyc found';
+    statusCode = HttpStatus.OK;
+
+    return response
+      .status(statusCode)
+      .send(responseStructure(status, message, responseData, statusCode));
+  }
+
+  async getKycByClientId(@Res() response: Response, @Param() params): Promise<any> {
+    let status = false;
+    let message = '';
+    let responseData: object = null;
+    let statusCode: HttpStatus;
+    const kycId = params.id;
+    responseData = await this.kycRepo.findOne({
+      where: {user_id: kycId },
+      relations: { user: true },
+    });
+
+    if (responseData) {
+      message = 'KYC data found';
+      status = true;
+    } else message = 'No kyc found';
+    statusCode = HttpStatus.OK;
 
     return response
       .status(statusCode)
@@ -184,21 +200,21 @@ export class KycService extends BaseDataSource {
   async updateKYCStatus(
     kycDto: VerifyKYCDTO,
     @Res() response: Response,
+    @Param() params: number,
   ): Promise<any> {
     let status = false;
     let message = '';
     let responseData = null;
     let statusCode: HttpStatus;
 
-    const kyc = await this.kycRepo.findOneBy({ id: kycDto.kyc_id });
+    // const kyc = await this.kycRepo.findOneBy({ id: kycDto.kyc_id });
+    const kycId = params['id'];
+    const kyc = await this.updateEntity(kycId, 'id', {
+      kyc_verification_status: kycDto.status,
+      remark: kycDto.remark,
+    });
 
     if (kyc) {
-      await this.kycRepo.update(
-        { id: kyc.id },
-        {
-          kyc_verification_status: kycDto.status,
-        },
-      );
       message = 'KYC status updated to ' + kycDto.status;
       responseData = kyc;
       status = true;
@@ -255,7 +271,7 @@ export class KycService extends BaseDataSource {
    * @param params
    * @returns
    */
-  async uploadKYCProfile(
+  async uploadKYCIDCard(
     @Req() req,
     @Res() response: Response,
     @Param() params,
@@ -266,8 +282,8 @@ export class KycService extends BaseDataSource {
     let statusCode: HttpStatus;
 
     const updatedKYC = await this.updateEntity(params.id, 'id', {
-      profile_picture: await this.uploadFile(req, {
-        fieldName: 'profile_picture',
+      id_card: await this.uploadFile(req, {
+        fieldName: 'id_card',
       }),
     });
 

@@ -26,9 +26,14 @@ export enum VerificationEnums {
 }
 export enum ApprovalStatus {
   verified = 'approved',
-  no = 'not_approved',
   pending = 'pending',
   reviewed = 'reviewed',
+  decline = 'declined',
+}
+export enum RepaymentStatus {
+  confirmed = 'confirmed',
+  pending = 'pending',
+  disputed = 'disputed',
   decline = 'declined',
 }
 

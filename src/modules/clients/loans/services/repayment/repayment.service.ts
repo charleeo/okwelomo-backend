@@ -1,26 +1,25 @@
-import { HttpStatus, Injectable, Res, Body, Request } from '@nestjs/common';
+import { HttpStatus, Injectable, Res, Body, Request, Req } from '@nestjs/common';
 import { Response } from 'express';
 import { LoanRepository } from '../../repositories/loan.repository';
 import { LoanSettingService } from '../loan.settings.service';
 import { LoanRepaymentRepository } from '../../repositories/loan.repayment.repository';
 import { LoanRepaymentDto } from '../../dto/loan.repayment.dto';
 import { responseStructure } from 'src/common/helpers/response.structure';
-import { logErrors } from 'src/common/helpers/logging';
 import { Loan } from '../../entities/loan.entity';
 import { LoanRepayment } from '../../entities/loan.repayments.entity';
 import { LoanType } from 'src/modules/config/entities/loan.type.entity';
 import { generateReference } from 'src/common/helpers/generals';
 import { LoanRepaymentConfirmationDto } from '../../dto/repayment.confirmation.dto';
 import { BaseDataSource } from 'src/common/helpers/base.data.ource';
-import { DaysAndWeekAndMonths } from 'src/modules/entities/common.type';
+import { DaysAndWeekAndMonths, RepaymentStatus } from 'src/modules/entities/common.type';
 import { ApplicationService } from '../application/application.service';
+import { LoanRepaymentDeletionDto } from '../../dto/repayment.deletion.dto';
 
 @Injectable()
 export class RepaymentService extends BaseDataSource {
   private readonly CODE: string;
   constructor(
     private readonly loanRepo: LoanRepository,
-    private readonly loanService: ApplicationService,
     private readonly loanRepaymentRepo: LoanRepaymentRepository,
     private readonly loanSettingService: LoanSettingService,
   ) {
@@ -43,25 +42,26 @@ export class RepaymentService extends BaseDataSource {
     let message = '';
     let responseData = null;
 
-    const reference = dto.reference_number;
     const repayment_amount = dto.repayment_amount;
-    const loan = await this.loan(reference);
+    
+    const loan = await this.loan(dto.loan.id);
 
     const loanType = await this.loanSettingService.getLoanTypeById(
-      loan.loan_type,
+      dto.loan.loan_type['id'],
     );
 
     //repayment data
     const repaymentObject = await this.setRepaymentObject(
-      loan,
+      dto.loan,
       loanType,
       repayment_amount,
     );
 
+    
     const payment = await this.loanRepaymentRepo.save({
       amount: repayment_amount,
       repayments_data: repaymentObject,
-      reference,
+      loan:loan,
       repayment_reference: generateReference(this.CODE),
     });
 
@@ -87,7 +87,7 @@ export class RepaymentService extends BaseDataSource {
   public async getLoansByRefernce(reference): Promise<LoanRepayment[]> {
     const repayments = await this.loanRepaymentRepo
       .createQueryBuilder('repayment')
-      .where('repayment.reference = :referenceNo', { referenceNo: reference })
+      .where('repayment.loan_id = :loanId', { loanId: reference })
       .getMany();
     return repayments;
   }
@@ -100,8 +100,10 @@ export class RepaymentService extends BaseDataSource {
    * @returns
    */
   private async setRepaymentObject(loan: Loan, loanTYpe: LoanType, amount) {
-    const repaymentDataCount = await this.getLoansByRefernce(loan.reference);
+
+    const repaymentDataCount = await this.getLoansByRefernce(loan.id);
     let sum_of_payments = 0;
+    
     if (repaymentDataCount) {
       repaymentDataCount.map((payment) => {
         const totalAmount = Number(payment.amount).toFixed(2);
@@ -165,10 +167,10 @@ export class RepaymentService extends BaseDataSource {
 
     const repaymentData = await this.repayment(repayment_reference);
 
-    const loan = await this.loan(repaymentData.reference);
+    const loan = await this.loan(repaymentData.loan.id);
 
     //check for the status selected if it true, then update the records
-    if (confirmation_status) {
+    if (confirmation_status !== RepaymentStatus.pending) {
       const updatedRepaymentData = await this.updateEntity(
         repayment_reference,
         'repayment_reference',
@@ -177,13 +179,15 @@ export class RepaymentService extends BaseDataSource {
         },
       );
 
-      if (!repaymentData.confirmation_status) {
-        const updatedLoan = await this.loanService.updateEntity(
-          loan.id,
-          'id',
-          await this.getData(loan, repaymentData),
+      if (confirmation_status === RepaymentStatus.confirmed && repaymentData.confirmation_status !== RepaymentStatus.confirmed) {
+       const {repayment_sum, repayment_percentage} = await this.getData(loan, repaymentData)
+        await this.loanRepo.update(
+          {reference:loan.reference},
+          {
+            repayment_percentage,
+            repayment_sum
+          }
         );
-        responseData['loan'] = updatedLoan;
       }
       statusCode = HttpStatus.CREATED;
       status = true;
@@ -198,12 +202,51 @@ export class RepaymentService extends BaseDataSource {
       .send(responseStructure(status, message, responseData, statusCode));
   }
 
-  private async loan(reference): Promise<Loan> {
-    return await this.loanRepo.findOneByOrFail({ reference });
+
+  public async deleteRepayment(
+    repayment_reference,
+    @Res() response: Response,
+     @Req() req: Request,
+  ) {
+    let status = false;
+    let statusCode: HttpStatus;
+    let message = 'no data found';
+    let responseData = {};
+     const user = await this.getUser(req);
+
+    const repaymentData = await this.loanRepaymentRepo.findOneByOrFail({repayment_reference, confirmation_status:RepaymentStatus.pending})
+
+    if(user.is_admin){
+      repaymentData.isDeleted = true
+      await this.loanRepaymentRepo.createQueryBuilder()
+      .softDelete()
+      .where('repayment_reference=:ref',{ref:repayment_reference})
+      .execute()
+      await this.loanRepaymentRepo.save(repaymentData)
+    }else {
+      await this.loanRepaymentRepo.delete(repaymentData.id)
+    }
+
+    if(repaymentData){
+      statusCode = HttpStatus.CREATED;
+      status = true;
+      message = 'Loan repayment data updated';
+      responseData = repaymentData
+    }
+
+    return response
+      .status(statusCode)
+      .send(responseStructure(status, message, responseData, statusCode));
   }
-  private async repayment(repayment_reference): Promise<LoanRepayment> {
-    return await this.loanRepaymentRepo.findOneByOrFail({
-      repayment_reference,
-    });
+
+  protected async loan(id): Promise<Loan> {
+    return await this.loanRepo.findOneByOrFail({ id });
   }
+
+protected async repayment(repayment_reference): Promise<LoanRepayment> {
+    return await this.loanRepaymentRepo.findOneOrFail(
+      { where: { repayment_reference }, relations: ['loan'] }
+    );
+  }
+
 }

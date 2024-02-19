@@ -1,15 +1,9 @@
-import {
-  IsNotEmpty,
-  IsNumber,
-  IsOptional,
-  IsString,
-  Length,
-  Matches,
-} from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, Length } from 'class-validator';
 
 export class LoanSettingDTO {
   @IsNotEmpty()
   @IsString()
+  @Length(6,6)
   // @Matches(
   //   /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?#&^<>])[A-Za-z\d@$!%*?#&^<>]{6,}$/,
   //   {
@@ -28,7 +22,6 @@ export class LoanSettingDTO {
   @Length(3, 225)
   receiving_bank: string;
 
-  @IsOptional()
-  @IsNumber()
+  @IsNotEmpty()
   default_loan_type: number;
 }

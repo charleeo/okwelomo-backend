@@ -1,4 +1,4 @@
-import { IsEnum, IsNotEmpty, IsNumber } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 import { ApprovalStatus } from 'src/modules/entities/common.type';
 
 export class ApproveLoanDto {
@@ -9,4 +9,8 @@ export class ApproveLoanDto {
   @IsNotEmpty()
   @IsNumber()
   public loan_id: number;
+
+  @IsNotEmpty()
+  @IsString()
+  comment:string
 }

@@ -1,3 +1,5 @@
+import { LoanType } from 'src/modules/config/entities/loan.type.entity';
+import { LoanRepaymentDurationCategory } from 'src/modules/config/entities/loans.category.entity';
 import {
   ApprovalStatus,
   InterestPaymentStatus,
@@ -10,7 +12,12 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   Generated,
+  OneToMany,
+  ManyToOne,
+  JoinColumn,
+  DeleteDateColumn,
 } from 'typeorm';
+import { LoanRepayment } from './loan.repayments.entity';
 
 @Entity({ name: 'loans' })
 export class Loan {
@@ -21,11 +28,16 @@ export class Loan {
   @Generated('uuid')
   uuid: string;
 
-  @Column({ type: 'int' })
-  loan_duration_category: number;
+  @ManyToOne(() => LoanRepaymentDurationCategory)
+  @JoinColumn({ name: 'loan_duration_category' }) 
+  loan_duration_category: LoanRepaymentDurationCategory;
 
-  @Column({ type: 'int' })
-  loan_type: number;
+  @ManyToOne(() => LoanType)
+  @JoinColumn({ name: 'loan_type' }) 
+  loan_type:LoanType
+
+   @OneToMany(() => LoanRepayment, repayment => repayment.loan,{eager:true})
+  repayments: LoanRepayment[] ;
 
   @Column({ type: 'int' })
   customer_id: number;
@@ -69,6 +81,9 @@ export class Loan {
   @Column({ type: 'varchar' })
   reference: string;
 
+  @Column({ type: 'text', nullable:true })
+  comment: string;
+
   @Column({
     type: 'enum',
     default: ApprovalStatus.pending,
@@ -85,6 +100,10 @@ export class Loan {
 
   @CreateDateColumn()
   created_at: Date;
+  
   @UpdateDateColumn()
   updated_at: Date;
+
+   @DeleteDateColumn()
+  deletedAt:Date
 }

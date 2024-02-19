@@ -1,38 +1,39 @@
-import { MiddlewareConsumer, Module, NestModule,RequestMethod} from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { AuthController } from './auth.controller';
-import { PassportModule } from '@nestjs/passport';
-
-import { LocalStrategy } from './local.strategy';
-import { JwtModule } from '@nestjs/jwt';
-import { JwtStrategy } from './jwt.strategy';
-import { UserModule } from '../user/user.module';
-import { AuthMiddleware } from 'src/middleware/auth/auth.middleware';
-import { ConfigModule } from '../config/config.module';
-
 import { LoginMiddleware } from 'src/middleware/login/login.middleware';
 
+import {
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  RequestMethod,
+} from '@nestjs/common';
+import { JwtModule } from '@nestjs/jwt';
+import { PassportModule } from '@nestjs/passport';
+
+import { ConfigModule } from '../config/config.module';
+import { UserModule } from '../user/user.module';
+import { AuthController } from './auth.controller';
+import { AuthService } from './auth.service';
+import { JwtStrategy } from './strategies/jwt.strategy';
+import { LocalStrategy } from './strategies/local.strategy';
+import { RefreshJwtStrategy } from './strategies/refresh.token.strategy';
 
 @Module({
   imports: [
     PassportModule,
     UserModule,
     JwtModule.register({
-        secret: process.env.JWTKEY,
-        signOptions: { expiresIn: process.env.TOKEN_EXPIRATION },
+      secret: process.env.JWTKEY,
+      signOptions: { expiresIn: process.env.TOKEN_EXPIRATION },
     }),
-    ConfigModule//for used in the auth service
+    ConfigModule, //for used in the auth service
   ],
-  providers: [
-    AuthService,
-    LocalStrategy,
-    JwtStrategy
-  ],
-  controllers: [AuthController]
+  providers: [AuthService, LocalStrategy, JwtStrategy, RefreshJwtStrategy],
+  controllers: [AuthController],
 })
 export class AuthModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-      consumer.apply(LoginMiddleware)
+    consumer
+      .apply(LoginMiddleware)
       .forRoutes({ path: 'auth/login', method: RequestMethod.POST });
   }
 }

@@ -1,23 +1,15 @@
 import { Exclude } from 'class-transformer';
-
-import { Gender } from 'src/modules/entities/common.type';
-import { Roles } from '../../config/entities/roles.entity';
+import { KYC } from 'src/modules/clients/kyc/entities/kyc.entity';
+import { UserRoles } from 'src/modules/config/entities/user.role.entity';
 import {
-  Entity,
-  PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
-  UpdateDateColumn,
-  OneToMany,
-  OneToOne,
-  JoinColumn,
-  JoinTable,
-  ManyToMany,
-  ManyToOne,
+  Entity,
   Generated,
+  OneToOne,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
-import { UserRoles } from 'src/modules/config/entities/user.role.entity';
-import { KYC } from 'src/modules/clients/kyc/entities/kyc.entity';
 
 @Entity()
 export class Users {
@@ -34,12 +26,28 @@ export class Users {
   @Column({ nullable: true, type: 'varchar' })
   firstname: string;
 
+  @Column({ nullable: true, type: 'varchar', unique: true })
+  username: string;
+
   @Column({ nullable: true, type: 'varchar' })
   lastname: string;
+
+  @Column({
+    nullable: true,
+    type: 'varchar',
+    default: 'images/no_image.png',
+  })
+  profile_picture: string;
 
   @Column({ type: 'varchar' })
   @Exclude()
   password: string;
+
+  @Column({ type: 'varchar', nullable: true })
+  phone: string;
+
+  @Column({ type: 'text', nullable: true })
+  address: string;
 
   @Column({ type: 'bool', default: false })
   is_admin: boolean;

@@ -1,8 +1,11 @@
-// file.service.ts
-
-import { Injectable, BadRequestException } from '@nestjs/common';
+import * as fs from 'fs';
 import multer, { diskStorage } from 'multer';
 import { v4 as uuidv4 } from 'uuid';
+
+import {
+  BadRequestException,
+  Injectable,
+} from '@nestjs/common';
 
 @Injectable()
 export class FileUploadService {
@@ -44,17 +47,14 @@ export class FileUploadService {
 
     return new Promise<string>((resolve, reject) => {
       multer(multerOptions).single(fieldName)(request, null, (err) => {
-        if (!request.file) {
-          //when no file is provied
-          reject(new BadRequestException(`Please provide a valid file.`));
-        } else if (err) {
+         if (err) {
           //when there is another error
           if (err instanceof multer.MulterError) {
             //when error is a multer type of error
             if (err.code === 'LIMIT_FILE_SIZE') {
               reject(
                 new BadRequestException(
-                  `File size exceeds the maximum limit of ${maxFileSize} bytes.`,
+                  `File size exceeds the maximum limit of ${Math.floor(maxFileSize/1000000)} mb.`,
                 ),
               );
             } else {
@@ -69,6 +69,13 @@ export class FileUploadService {
         }
       });
     });
+  }
+
+  async deleteFileFromFolder(path) {
+    if (fs.existsSync(path)) {
+      // Delete the file
+      fs.unlinkSync(path);
+    }
   }
 }
 

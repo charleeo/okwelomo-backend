@@ -1,10 +1,11 @@
-import { HttpStatus, Injectable, Res, Body, Request } from '@nestjs/common';
+import { HttpStatus, Injectable, Res, Body, Request, Req } from '@nestjs/common';
 
 import { responseStructure } from 'src/common/helpers/response.structure';
 
 import { Response } from 'express';
 
 import {
+  fullDateWithoutTime,
   generateReference,
   setPaymentCommencementDateDaily,
   setPaymentCommencementDateMonthly,
@@ -14,6 +15,7 @@ import {
 } from 'src/common/helpers/generals';
 
 import {
+  ApprovalStatus,
   DaysAndWeekAndMonths,
   InterestPaymentStatus,
 } from 'src/modules/entities/common.type';
@@ -25,6 +27,8 @@ import { ApproveLoanDto } from '../../dto/verify.loan.dto';
 import { LoanRepaymentDurationCategory } from 'src/modules/config/entities/loans.category.entity';
 import { LoanType } from 'src/modules/config/entities/loan.type.entity';
 import { BaseDataSource } from 'src/common/helpers/base.data.ource';
+import { instanceToPlain } from 'class-transformer';
+import { Loan } from '../../entities/loan.entity';
 
 @Injectable()
 export class ApplicationService extends BaseDataSource {
@@ -65,10 +69,7 @@ export class ApplicationService extends BaseDataSource {
     const {
       repayment_amount,
       interest,
-      repayment_commencement_date,
-      repayment_due_date,
       amount,
-      start_date,
     } = await this.processLoans(dto, loanType, repaymenDurationtPlan);
 
     let repaymentAmount = Number(repayment_amount).toFixed(2);
@@ -78,16 +79,21 @@ export class ApplicationService extends BaseDataSource {
       repaymenDurationtPlan,
     );
 
-    const interestPaymentCheck = this.checInterestUpfrontPayment(
+    const interestPaymentCheck = this.checkInterestUpfrontPayment(
       dto,
       amount,
       interest,
       repayment_counts,
       repaymentAmount,
     );
+
     const repaymentObject = interestPaymentCheck.object;
     repaymentAmount = interestPaymentCheck.amount;
-    const loanRepaymentTotal = amount + interest;
+    let loanRepaymentTotal = parseFloat(amount)
+
+    if(dto.interest_payment_status === InterestPaymentStatus.not_paid_upfront){
+      loanRepaymentTotal + parseFloat(interest)
+    }
 
     //Save the loan information to database and return the response
     responseData = await this.loanRepo.save({
@@ -97,9 +103,6 @@ export class ApplicationService extends BaseDataSource {
       amount: amount,
       interest: interest,
       repayment_rate: parseFloat(repaymentAmount),
-      repayment_due_date: repayment_due_date,
-      repayment_start_date: repayment_commencement_date,
-      issue_date: start_date,
       repayment_intervals: repayment_counts,
       loan_duration_category: dto.loan_durtion_category_id,
       expected_repayment_amount: loanRepaymentTotal,
@@ -116,6 +119,8 @@ export class ApplicationService extends BaseDataSource {
       .status(statusCode)
       .send(responseStructure(status, message, responseData, statusCode));
   }
+
+  
 
   /**
    * @param amount
@@ -172,17 +177,13 @@ export class ApplicationService extends BaseDataSource {
   protected dailyLoansFormating(dto): any {
     const amount = dto.amount;
 
-    const grantedDate = dto.grantedDate;
-
-    const repaymentCommencementDate: Date =
-      setPaymentCommencementDateDaily(grantedDate);
+    const grantedDate = fullDateWithoutTime();
+    const repaymentCommencementDate: Date = setPaymentCommencementDateDaily(grantedDate);
 
     const repaymentAmount: number = this.calCulateDailyRepaymentPlan(amount);
-
-    const repaymentDueDate: Date = setPaymentDueDateDaily(
-      repaymentCommencementDate,
-    );
-
+    
+    const repaymentDueDate: Date = setPaymentDueDateDaily(new Date( repaymentCommencementDate))
+      
     const interest = this.calculateInterest(amount, 15);
 
     return {
@@ -208,14 +209,14 @@ export class ApplicationService extends BaseDataSource {
   protected monthlyLoansFormating(dto, repaymentCat): any {
     const amount = dto.amount;
 
-    const grantedDate = dto.grantedDate;
+    const grantedDate =fullDateWithoutTime();
 
     const interest: number = this.calculateInterest(amount, 20);
 
     const repaymentDuration = this.getRepaymentDurationLoanPlan(repaymentCat);
 
     const repaymentCommencementDate: Date =
-      setPaymentCommencementDateMonthly(grantedDate);
+      setPaymentCommencementDateMonthly(new Date(grantedDate));
 
     const repaymentAmount: number = this.calculateMonthlyRepaymentPlan(
       amount,
@@ -246,14 +247,13 @@ export class ApplicationService extends BaseDataSource {
   ): any {
     const amount = dto.amount;
 
-    const grantedDate = dto.grantedDate;
+    const grantedDate = fullDateWithoutTime();
 
     const interest: number = this.calculateInterest(amount, 18);
 
     const repaymentDuration = this.getRepaymentDurationLoanPlan(repaymentCat);
 
-    const repaymentCommencementDate: Date =
-      setPaymentCommencementDateWekly(grantedDate);
+    const repaymentCommencementDate: Date = setPaymentCommencementDateWekly(new Date(grantedDate));
 
     const repaymentAmount: number = this.calculateWeeklyRepaymentPlan(
       amount,
@@ -285,12 +285,12 @@ export class ApplicationService extends BaseDataSource {
     loanDurationPlan: LoanRepaymentDurationCategory,
   ): Promise<any> {
     const type = loanType.type;
+   
     if (type === DaysAndWeekAndMonths.DAILY) {
       return this.dailyLoansFormating(dto);
     } else if (type === DaysAndWeekAndMonths.WEEKLY) {
       return this.weeklyLoansFormating(dto, loanDurationPlan);
     }
-
     return this.monthlyLoansFormating(dto, loanDurationPlan);
   }
 
@@ -330,15 +330,44 @@ export class ApplicationService extends BaseDataSource {
     let message = '';
     let responseData = null;
 
+    const loanData = await this.loanRepo.findOneOrFail({where:{id:dto.loan_id},
+       relations:['loan_type','loan_duration_category'],
+     })
+     
+     /**
+      * Soft delete the record for feature records keeping
+      */
+     if(dto.status === ApprovalStatus.decline){
+        await this.loanRepo.createQueryBuilder()
+              .softDelete()
+              .where('reference=:ref',{ref:loanData.reference})
+              .execute()
+     }
+
+    const loanType = loanData.loan_type
+    
+
+    const repaymenDurationtPlan =loanData.loan_duration_category
+      
+    const {
+      repayment_commencement_date,
+      repayment_due_date,
+      start_date,
+    } = await this.processLoans(dto, loanType, repaymenDurationtPlan);
+   
     const loan = await this.updateEntity(dto.loan_id, 'id', {
       verification_status: dto.status,
+      comment: dto.comment,
+       repayment_due_date: repayment_due_date,
+      repayment_start_date: repayment_commencement_date,
+      issue_date: start_date,
     });
 
     if (!loan) {
       message = 'Loan does not exists';
       statusCode = HttpStatus.NOT_FOUND;
     } else {
-      message = `Loan is ${dto.status}`;
+      message = `Loan was/is ${dto.status.split('_').join(' ')}`;
       status = true;
       statusCode = HttpStatus.CREATED;
       responseData = loan;
@@ -358,7 +387,7 @@ export class ApplicationService extends BaseDataSource {
    * @param repaymentAmount
    * @returns
    */
-  private checInterestUpfrontPayment(
+  private checkInterestUpfrontPayment(
     dto: LoanApplicationDto,
     loanAmount,
     interest,
@@ -377,6 +406,50 @@ export class ApplicationService extends BaseDataSource {
         interest_payment_status: dto.interest_payment_status,
       };
     }
+      
     return { object: repaymentObject, amount: repaymentAmount };
+  }
+
+/**
+ * 
+ * @param reference 
+ * @param response 
+ * @param req 
+ * @returns any
+ */
+  public async deleteLoan(
+    reference,
+    @Res() response: Response,
+     @Req() req: Request,
+  ) {
+    let status = false;
+    let statusCode: HttpStatus;
+    let message = 'no data found';
+    let responseData = {};
+     const user = await this.getUser(req);
+
+    const loanData:Loan = await this.loanRepo.findOneByOrFail({reference, verification_status:ApprovalStatus.pending})
+
+    if(user.is_admin){
+    
+      await this.loanRepo.createQueryBuilder()
+      .softDelete()
+      .where('reference=:ref',{ref:loanData.reference})
+      .execute()
+      
+    }else {
+      await this.loanRepo.delete(loanData.id)
+    }
+
+    if(loanData){
+      statusCode = HttpStatus.CREATED;
+      status = true;
+      message = 'Loan repayment data updated';
+      responseData = loanData
+    }
+
+    return response
+      .status(statusCode)
+      .send(responseStructure(status, message, responseData, statusCode));
   }
 }

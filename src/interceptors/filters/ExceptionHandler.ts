@@ -8,7 +8,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { HttpAdapterHost } from '@nestjs/core';
-import { setExceptionFilters } from 'src/common/helpers/generals';
+import { AxiosError } from 'axios';
 import { logErrors } from 'src/common/helpers/logging';
 import { QueryFailedError } from 'typeorm';
 import { EntityNotFoundError } from 'typeorm/error/EntityNotFoundError';
@@ -40,6 +40,11 @@ export class ExceptionHandler implements ExceptionFilter {
     } else if (exception instanceof HttpException) {
       httpStatus = exception.getStatus();
       message = exception.message;
+    }
+   
+    else if (exception instanceof AxiosError ){
+      httpStatus = exception.status
+      message = exception.message
     }
 
     const responseBody = {

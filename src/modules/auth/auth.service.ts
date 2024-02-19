@@ -1,16 +1,16 @@
-import { ConflictException, Injectable, HttpStatus } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
-import { JwtService } from '@nestjs/jwt';
-import { UserService } from '../user/user.service';
-import { logData } from 'src/common/helpers/logging';
 import { instanceToPlain } from 'class-transformer';
-import { ConfigService } from '../config/services/config.service';
-import { ADMINROLES, ALLDUTIES } from 'src/config/constants';
-import { LoginDto } from './dto/login.dto';
-import { Roles } from '../config/entities/roles.entity';
-import { Action } from 'rxjs/internal/scheduler/Action';
-import { Actions } from '../config/entities/actions.entity';
 import { responseStructure } from 'src/common/helpers/response.structure';
+
+import {
+  HttpStatus,
+  Injectable,
+} from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+
+import { Users } from '../user/entities/user.entity';
+import { UserService } from '../user/services/user.service';
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -25,13 +25,7 @@ export class AuthService {
     // find if user exist with this email
     let userData = await this.userService.findOneWithRoles(username);
     const user = await this.userService.findOneByEmail(username);
-    userData = instanceToPlain(userData);
-    const actionarrays: string[] = [];
-    if (userData) {
-      userData.map((userActions) => {
-        actionarrays.push(userActions.tag_line);
-      });
-    }
+
     if (!user) {
       return null;
     }
@@ -41,35 +35,67 @@ export class AuthService {
     if (!match) {
       return null;
     }
+
+    userData = instanceToPlain(userData);
+    const actionarrays: string[] = [];
+    if (userData) {
+      userData.map((userActions) => {
+        actionarrays.push(userActions.tag_line);
+      });
+    }
+
     user['roleDetails'] = userData;
     user['actions'] = actionarrays;
-    delete user['password'];
-    return user;
+    const { password, ...result } = user;
+    return result;
   }
 
   public async login(req, res) {
-    let status: boolean;
+    let status: boolean =false;
     let message = '';
     let code = 200;
     let responseData = null;
-
-    // user = instanceToPlain(user)//convert it into a plain object
+    const remember = req.remember
     const user = await this.userService.findOneByEmail(req.email);
-
-    const token = await this.generateToken(instanceToPlain(user));
+    const { token, refreshToken } = await this.generateToken(
+      instanceToPlain(user), remember
+    );
     if (token) {
       status = true;
-      message = 'Token generated and login successful';
+      message = 'Login successful';
       code = 200;
     }
+
     delete user['password'];
     delete user['created_at'];
     delete user['updated_at'];
+
     responseData = user;
     responseData.token = token;
+    responseData.refreshToken = refreshToken;
     return res
       .status(HttpStatus.OK)
       .send(responseStructure(status, message, responseData, HttpStatus.OK));
+  }
+
+  public async refreshToken(user: Users, res) {
+    let status: boolean;
+    const message = '';
+
+    const newUser = await this.userService.findOneByEmail(user.email);
+
+    const responseData = await this.jwtService.sign(instanceToPlain(newUser));
+
+    return res
+      .status(HttpStatus.OK)
+      .send(
+        responseStructure(
+          status,
+          message,
+          { token: responseData },
+          HttpStatus.OK,
+        ),
+      );
   }
 
   public async createUser(user, res) {
@@ -77,14 +103,13 @@ export class AuthService {
     let error = null;
     let message = '';
     let responseData = null;
-    // hash the password
+
     try {
       const password = await this.hashPassword(user.password);
 
       const newUser = await this.userService.create({ ...user, password });
 
       delete newUser['password'];
-      // generate token
 
       if (newUser) {
         status = true;
@@ -101,9 +126,15 @@ export class AuthService {
       );
   }
 
-  private async generateToken(user) {
-    const token = await this.jwtService.sign(user);
-    return token;
+  private async generateToken(user,remember?) {
+     const token = remember? await this.jwtService.sign(user,{expiresIn:'2days'})
+     :
+     await this.jwtService.sign(user)
+     
+    const refreshToken = await this.jwtService.sign(user, {
+      expiresIn: process.env.REFRESHTOKEN_EXPIRATION,
+    });
+    return { token, refreshToken };
   }
 
   public async verifyToken(token) {
@@ -116,7 +147,6 @@ export class AuthService {
   }
 
   private async comparePassword(enteredPassword, dbPassword) {
-    const match = await bcrypt.compare(enteredPassword, dbPassword);
-    return match;
+    return await bcrypt.compare(enteredPassword, dbPassword);
   }
 }

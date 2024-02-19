@@ -5,6 +5,7 @@ import {
   Request as NestRequest,
   UseGuards,
   Res,
+  Param,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { LoanApplicationDto } from '../dto/apply.for.loan.dto';
@@ -32,5 +33,14 @@ export class LoansController {
     @Res() res: Response,
   ): Promise<any> {
     return await this.loanService.approveLoan(loan, res);
+  }
+
+  @Post(':id/delete')
+  async deleteLoan(
+    @Param('id') id,
+    @Res() res: Response,
+    @NestRequest() req : Request
+  ): Promise<any> {
+    return await this.loanService.deleteLoan(id, res,req);
   }
 }
