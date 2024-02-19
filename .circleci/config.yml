@@ -1,0 +1,46 @@
+version: 2.1
+
+jobs:
+  - build_infrastructure:
+      docker:
+        - image: hashicorp/terraform:1.0.0
+      steps:
+        - checkout
+        - run:
+            name: Initialize Terraform
+            command: terraform init
+        - run:
+            name: Apply Terraform Changes
+            command: terraform apply -auto-approve
+        - persist_to_workspace:
+            root: .
+            paths: .
+
+  - deploy_nestjs:
+      docker:
+        - image: node:14
+      steps:
+        - attach_workspace:
+            at: /app
+        - run:
+            name: Install Dependencies
+            command: npm install
+        - run:
+            name: Build NestJS Application
+            command: npm run build
+        - run:
+            name: Run Database Migrations
+            command: npm run migration:run
+        - run:
+            name: Start NestJS Application with PM2
+            command: pm2 start dist/src/main.js --name "nestjs-app"
+            background: true
+
+workflows:
+  version: 2
+  build_and_deploy:
+    jobs:
+      - build_infrastructure
+      - deploy_nestjs:
+          requires:
+            - build_infrastructure
