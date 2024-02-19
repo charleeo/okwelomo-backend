@@ -37,4 +37,5 @@ lerna-debug.log*
 uploads/
 terraform.*
 terraform/
+credentials.tfvars
 .terraform.lock.*
