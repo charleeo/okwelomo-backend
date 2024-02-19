@@ -10,7 +10,7 @@ jobs:
           name: Initialize Terraform
           command: terraform init
       - run:
-          name: Apply Terraform Changes
+          name: Apply Terraform Changes to build
           command: terraform apply -auto-approve
       - persist_to_workspace:
           root: .
