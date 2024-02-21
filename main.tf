@@ -1,123 +1,30 @@
 provider "aws" {
-  access_key = "${var.AWS_ACCESS_KEY_ID}"
-  secret_key = "${var.AWS_SECRET_ACCESS_KEY}"
-  region     = "eu-west-2"  # Specify your AWS region
+  region = "eu-west-1"
 }
 
-resource "aws_vpc" "my_vpc" {
+# Create VPC
+resource "aws_vpc" "okw" {
   cidr_block = "10.0.0.0/16"
-  enable_dns_support = true
-  enable_dns_hostnames = true
+   enable_dns_hostnames = true
+    enable_dns_support = true
+    tags = {
+      Name="okw_vpc"
+    }
+}
 
+# Create internet gateway
+resource "aws_internet_gateway" "okw_igw" {
+  vpc_id = aws_vpc.okw.id
   tags = {
-    Name = "my-vpc"
+    Name ="okw_igw"
   }
 }
 
-output "vpc" {
-  description = "VPC information"
-  value = aws_vpc.my_vpc
-}
-output "secret_group" {
-  description = "VPC Security group"
-  value = aws_security_group.my_db_sg
-}
-
-resource "aws_subnet" "my_subnet" {
-  vpc_id                  = aws_vpc.my_vpc.id
-  cidr_block              = "10.0.1.0/24"
-  availability_zone       = "eu-west-2a" # Change to your desired AZ
-  map_public_ip_on_launch = true
-
-  tags = {
-    Name = "my-subnet"
-  }
-}
-resource "aws_subnet" "my_subnet_2" {
-  vpc_id                  = aws_vpc.my_vpc.id
-  cidr_block              = "10.0.2.0/24"
-  availability_zone       = "eu-west-2b" # Change to your desired AZ
-  map_public_ip_on_launch = true
-
-  tags = {
-    Name = "my-subnet_2"
-  }
-}
-
-resource "aws_instance" "my_ec2_instance" {
-  count         = 2
-  ami           = "ami-0e5f882be1900e43b" # Specify your desired AMI ID
-  instance_type = "t2.micro"
-  subnet_id     = aws_subnet.my_subnet.id
-  vpc_security_group_ids = [aws_security_group.my_db_sg.id]
-
-
-  tags = {
-    Name = "my-ec2-instance-${count.index}"
-  }
-}
-
-resource "aws_db_subnet_group" "my_db_subnet_group" {
-  name       = "my-db-subnet-group"
-  subnet_ids = [aws_subnet.my_subnet.id, aws_subnet.my_subnet_2.id] # List of subnet IDs within the VPC
-  tags = {
-    Name = "DB-Subnet"
-  }
-}
-
-
-resource "aws_security_group" "my_ec2_sg" {
-  vpc_id = aws_vpc.my_vpc.id
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  # Example ingress rule for SSH access, modify as needed
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "my-ec2-sg"
-  }
-}
-
-resource "aws_db_instance" "my_db_instance" {
-  identifier           = "my-nestjs-db"
-  allocated_storage    = 20
-  storage_type         = "gp2"
-  engine               = "postgres"
-  engine_version       = "15.5"
-  instance_class       = "db.t3.micro"
-  db_name              = "okw"
-  username             = "charles"
-  password             = "charles1234"
-  parameter_group_name = "default.postgres15"
-  vpc_security_group_ids = [aws_security_group.my_db_sg.id]
-  db_subnet_group_name = aws_db_subnet_group.my_db_subnet_group.name
-
-  tags = {
-    Name = "my-db-instance"
-  }
-}
-
-
-resource "aws_security_group" "my_db_sg" {
-  vpc_id = aws_vpc.my_vpc.id
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+# Create security group
+resource "aws_security_group" "okw_sg" {
+  name        = "example_sg"
+  description = "Allow inbound traffic to RDS"
+  vpc_id      = aws_vpc.okw.id
 
   ingress {
     from_port   = 5432
@@ -126,7 +33,154 @@ resource "aws_security_group" "my_db_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
   tags = {
-    Name = "my-db-sg"
+    Name = "okw_sg"
   }
 }
+
+# Create public subnet A
+resource "aws_subnet" "public_subnet_a" {
+  vpc_id            = aws_vpc.okw.id
+  cidr_block        = "10.0.1.0/24"
+  availability_zone = "eu-west-1a" # Specify the availability zone
+  tags = {
+    Name = "subnet_1"
+  }
+}
+
+# Create public subnet B
+resource "aws_subnet" "public_subnet_b" {
+  vpc_id            = aws_vpc.okw.id
+  cidr_block        = "10.0.2.0/24"
+  availability_zone = "eu-west-1b" # Specify the availability zone
+  tags = {
+    Name = "subnet_2"
+  }
+}
+
+# Create route table for public subnets
+resource "aws_route_table" "public_route_table" {
+  vpc_id = aws_vpc.okw.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.okw_igw.id
+  }
+  tags = {
+    Name = "okw_route_table"
+  }
+}
+
+# Associate public subnet A with the route table
+resource "aws_route_table_association" "public_subnet_a_association" {
+  subnet_id      = aws_subnet.public_subnet_a.id
+  route_table_id = aws_route_table.public_route_table.id
+  
+}
+
+# Associate public subnet B with the route table
+resource "aws_route_table_association" "public_subnet_b_association" {
+  subnet_id      = aws_subnet.public_subnet_b.id
+  route_table_id = aws_route_table.public_route_table.id
+}
+
+# Create RDS subnet group
+resource "aws_db_subnet_group" "okw_db_subnet_group" {
+  name       = "okw_db_subnet_group"
+  subnet_ids = [aws_subnet.public_subnet_a.id, aws_subnet.public_subnet_b.id]
+}
+
+# Create RDS instance
+resource "aws_db_instance" "example_db_instance" {
+  identifier            = "okw-db-instance"
+  allocated_storage     = 20
+  storage_type          = "gp2"
+  engine                = "postgres"
+  engine_version        = "16"
+  instance_class        = "db.t3.micro"
+  db_name               =  "dev"
+  username              = "admindev"
+  password              = "charles1234"
+  db_subnet_group_name  = aws_db_subnet_group.okw_db_subnet_group.name
+  vpc_security_group_ids = [aws_security_group.okw_sg.id]
+  publicly_accessible   = true # This makes your RDS instance publicly accessible
+}
+
+resource "aws_instance" "okw_app_instance" {
+  ami           = "ami-0905a3c97561e0b69" 
+  instance_type = "t2.micro"
+  subnet_id     = aws_subnet.public_subnet_b.id
+  security_groups = [aws_security_group.okw_sg.name]
+  key_name      = "okw" 
+
+  tags = {
+    Name = "okw_nest_instance"
+  }
+   
+
+    user_data = <<-EOF
+              #!/bin/bash
+              sudo apt-get update
+              sudo apt-get install -y apache2
+              sudo a2enmod proxy proxy_http
+              sudo systemctl start apache2
+              sudo systemctl enable apache2
+              # Install Node.js
+              curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -
+              sudo apt-get install -y nodejs git
+              # Clone your repository
+              git clone https://charleeo:${var.PA_TOKEN}@github.com/charleeo/okwelomo-backend.git /var/www/nestjsapp
+              cd /var/www/nestjsapp
+              # Install PM2 to keep your app running
+              sudo npm install -g pm2
+              # Install dependencies and run migrations
+              npm install
+              npm run build
+              npm run migration:run
+              # Start your NestJS application
+              pm2 start dist/src/main.js --name nestjsapp
+              # Configure Apache to reverse proxy to your application
+              echo '<VirtualHost *:80>
+              ProxyRequests Off
+              ProxyPreserveHost On
+              ProxyVia Full
+              <Proxy *>
+                Require all granted
+              </Proxy>
+              <Location />
+                ProxyPass http://127.0.0.1:3000/
+                ProxyPassReverse http://127.0.0.1:3000/
+              </Location>
+              </VirtualHost>' | sudo tee /etc/apache2/sites-available/nestjsapp.conf
+              sudo a2ensite nestjsapp.conf
+              sudo systemctl restart apache2
+              EOF
+}
+
+output "instance_public_ip" {
+  value = aws_instance.okw_app_instance.public_ip
+}
+
+

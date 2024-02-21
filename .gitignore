@@ -39,3 +39,7 @@ terraform.*
 terraform/
 credentials.tfvars
 .terraform.lock.*
+my_keypairs.pem
+okw.pem
+errored.tfstate
+.terraform/*
