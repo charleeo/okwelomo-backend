@@ -8,7 +8,6 @@ import {
 dotenv.config();
 const port = process.env.DB_PORT;
 const appEnv = process.env.APP_ENV
-console.log(appEnv)
 export const datasourceOption: DataSourceOptions = {
   type: process.env.DB_TYPE as any,
   host: process.env.DB_HOST,
