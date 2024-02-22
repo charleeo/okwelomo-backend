@@ -43,3 +43,5 @@ my_keypairs.pem
 okw.pem
 errored.tfstate
 .terraform/*
+
+okw-ireland.pem

@@ -34,19 +34,26 @@ resource "aws_security_group" "okw_sg" {
   }
 
   ingress {
+    description = "HTTPS"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
+    description = "HTTP"
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-
   ingress {
+    description = "SSH"
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-
 
   egress {
     from_port   = 0
@@ -88,6 +95,11 @@ resource "aws_route_table" "public_route_table" {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.okw_igw.id
   }
+  
+  route {
+    ipv6_cidr_block = "::/0"
+    gateway_id      = aws_internet_gateway.okw_igw.id
+  }
   tags = {
     Name = "okw_route_table"
   }
@@ -128,17 +140,22 @@ resource "aws_db_instance" "example_db_instance" {
   publicly_accessible   = true # This makes your RDS instance publicly accessible
 }
 
+resource "aws_network_interface" "web-server-nic" {
+  subnet_id       = aws_subnet.public_subnet_a.id
+  private_ips     = ["10.0.1.50"]
+  security_groups = [aws_security_group.okw_sg.id]
+}
+
 resource "aws_instance" "okw_app_instance" {
   ami           = "ami-0905a3c97561e0b69" 
   instance_type = "t2.micro"
   subnet_id     = aws_subnet.public_subnet_b.id
-  security_groups = [aws_security_group.okw_sg.name]
-  key_name      = "okw" 
-
+  security_groups = [aws_security_group.okw_sg.id]
+  key_name      = "okw-ireland"
+  associate_public_ip_address = true
   tags = {
     Name = "okw_nest_instance"
   }
-   
 
     user_data = <<-EOF
               #!/bin/bash
@@ -182,5 +199,8 @@ resource "aws_instance" "okw_app_instance" {
 output "instance_public_ip" {
   value = aws_instance.okw_app_instance.public_ip
 }
+
+
+
 
 
