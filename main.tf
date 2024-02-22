@@ -175,6 +175,7 @@ resource "aws_instance" "okw_app_instance" {
               # Clone your repository
               git clone https://charleeo:${var.PA_TOKEN}@github.com/charleeo/okwelomo-backend.git /var/www/nestjsapp
               cd /var/www/nestjsapp
+              git checkout -b dev origin/dev
               # Install PM2 to keep your app running
               sudo npm install -g pm2
               # Install dependencies and run migrations
