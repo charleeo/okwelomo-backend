@@ -23,7 +23,7 @@ export class LoansController {
   async create(
     @Body() loan: LoanApplicationDto,
     @Res() res: Response,
-    @NestRequest() req: Request,
+    @NestRequest() req: any,
   ): Promise<any> {
     return await this.loanService.applayForLoan(loan, res, req);
   }
@@ -39,7 +39,7 @@ export class LoansController {
   async deleteLoan(
     @Param('id') id,
     @Res() res: Response,
-    @NestRequest() req : Request
+    @NestRequest() req : any
   ): Promise<any> {
     return await this.loanService.deleteLoan(id, res,req);
   }

@@ -146,6 +146,11 @@ resource "aws_network_interface" "web-server-nic" {
   security_groups = [aws_security_group.okw_sg.id]
 }
 
+output "app_instance" {
+  description = "Get the public IP of the EC2 instance"
+  value = aws_instance.okw_app_instance.public_dns
+}
+
 resource "aws_instance" "okw_app_instance" {
   ami           = "ami-0905a3c97561e0b69" 
   instance_type = "t2.micro"
@@ -179,17 +184,20 @@ resource "aws_instance" "okw_app_instance" {
               # Start your NestJS application
               pm2 start dist/src/main.js --name nestjsapp
               # Configure Apache to reverse proxy to your application
-              echo '<VirtualHost *:80>
-              ProxyRequests Off
-              ProxyPreserveHost On
-              ProxyVia Full
-              <Proxy *>
-                Require all granted
-              </Proxy>
-              <Location />
-                ProxyPass http://127.0.0.1:3000/
-                ProxyPassReverse http://127.0.0.1:3000/
-              </Location>
+              echo '
+              <VirtualHost *:80>
+                  ServerName: 
+
+                  ProxyRequests Off
+                  ProxyPreserveHost On
+                  ProxyVia Full
+
+                  <Proxy *>
+                      Require all granted
+                  </Proxy>
+
+                  ProxyPass / http://127.0.0.1:4551/
+                  ProxyPassReverse / http://127.0.0.1:4551/
               </VirtualHost>' | sudo tee /etc/apache2/sites-available/nestjsapp.conf
               sudo a2ensite nestjsapp.conf
               sudo systemctl restart apache2
@@ -199,6 +207,18 @@ resource "aws_instance" "okw_app_instance" {
 output "instance_public_ip" {
   value = aws_instance.okw_app_instance.public_ip
 }
+
+
+# <VirtualHost *:80>
+#         ServerName ec2-18-201-113-203.eu-west-1.compute.amazonaws.com
+#         ErrorLog /var/log/httpd/error.log
+#         CustomLog /var/log/httpd/access.log combined
+#         ProxyRequests On
+#         ProxyPass / http://localhost:4551
+#         ProxyPassReverse / http://localhost:4551
+# </VirtualHost>
+
+
 
 
 
