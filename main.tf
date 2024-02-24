@@ -1,5 +1,7 @@
 provider "aws" {
   region = "eu-west-1"
+  access_key = var.AWS_ACCESS_KEY_ID
+  secret_key = var.AWS_SECRET_ACCESS_KEY
 }
 
 # Create VPC
@@ -175,7 +177,7 @@ resource "aws_instance" "okw_app_instance" {
     #           # Clone your repository
     #           git clone https://charleeo:${var.PA_TOKEN}@github.com/charleeo/okwelomo-backend.git /var/www/nestjsapp
     #           cd /var/www/nestjsapp
-    #           git checkout -b dev origin/dev
+    #           git checkout -b dev orign
     #           # Install PM2 to keep your app running
     #           sudo npm install -g pm2
     #           # Install dependencies and run migrations
@@ -211,7 +213,7 @@ output "instance_public_ip" {
 
 
 # <VirtualHost *:80>
-#         ServerName ec2-18-201-113-203.eu-west-2.compute.amazonaws.com
+#         ServerName ec2-18-201-113-203.eu-west-1.compute.amazonaws.com
 #         ErrorLog /var/log/httpd/error.log
 #         CustomLog /var/log/httpd/access.log combined
 #         ProxyRequests On
