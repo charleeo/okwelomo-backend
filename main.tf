@@ -67,7 +67,7 @@ resource "aws_security_group" "okw_sg" {
   }
 }
 
-# Create public subnet A
+# Create public subnet AB
 resource "aws_subnet" "public_subnet_a" {
   vpc_id            = aws_vpc.okw.id
   cidr_block        = "10.0.1.0/24"
