@@ -23,11 +23,29 @@ jobs:
       - attach_workspace:
           at: /app
       - run:
+          name: Install Apache2
+          command: |
+            sudo apt update
+            sudo apt install -y apache2
+      - run:
           name: Install Dependencies
           command: npm install
       - run:
           name: Build NestJS Application
           command: npm run build
+      - run:
+          name: Configure Apache Reverse Proxy
+          command: |
+            sudo tee /etc/apache2/sites-available/nestjs.conf > /dev/null <<EOF
+            <VirtualHost *:80>
+                ServerName example.com
+                ServerAlias www.example.com
+                ProxyPass / http://localhost:4551/
+                ProxyPassReverse / http://localhost:4551/
+            </VirtualHost>
+            EOF
+            sudo a2ensite nestjs.conf
+            sudo systemctl reload apache2
       - run:
           name: Run Database Migrations
           command: npm run migration:run
