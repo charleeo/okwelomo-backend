@@ -36,14 +36,12 @@ jobs:
       - run:
           name: Configure Apache Reverse Proxy
           command: |
-            sudo tee /etc/apache2/sites-available/nestjs.conf > /dev/null <<EOF
-            <VirtualHost *:80>
-                ServerName example.com
-                ServerAlias www.example.com
-                ProxyPass / http://localhost:4551/
-                ProxyPassReverse / http://localhost:4551/
-            </VirtualHost>
-            EOF
+            echo "<VirtualHost *:80>" | sudo tee /etc/apache2/sites-available/nestjs.conf > /dev/null
+            echo "    ServerName example.com" | sudo tee -a /etc/apache2/sites-available/nestjs.conf > /dev/null
+            echo "    ServerAlias www.example.com" | sudo tee -a /etc/apache2/sites-available/nestjs.conf > /dev/null
+            echo "    ProxyPass / http://localhost:3000/" | sudo tee -a /etc/apache2/sites-available/nestjs.conf > /dev/null
+            echo "    ProxyPassReverse / http://localhost:3000/" | sudo tee -a /etc/apache2/sites-available/nestjs.conf > /dev/null
+            echo "</VirtualHost>" | sudo tee -a /etc/apache2/sites-available/nestjs.conf > /dev/null
             sudo a2ensite nestjs.conf
             sudo systemctl reload apache2
       - run:
