@@ -9,49 +9,49 @@ jobs:
       - run:
           name: Initialize Terraform
           command: terraform init -backend-config="token={TF_TOKEN_app_terraform_io}"
-      # - run:
-      #     name: Apply Terraform Changes to build
-      #     command: terraform apply -auto-approve
-      # - persist_to_workspace:
-      #     root: .
-      #     paths: .
+      - run:
+          name: Apply Terraform Changes to build
+          command: terraform apply -auto-approve
+      - persist_to_workspace:
+          root: .
+          paths: .
 
-  # deploy_nestjs:
-  #   docker:
-  #     - image: node:14
-  #   steps:
-  #     - run:
-  #         name: Deploy NestJS Application
-  #         command: |
-  #           apt-get update
-  #            apt-get install -y apache2 sudo
-  #           sudo a2enmod proxy proxy_http
-  #           sudo systemctl start apache2
-  #           sudo systemctl enable apache2
-  #           curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -
-  #           sudo apt-get install -y nodejs git
-  #           git clone https://charleeo:${var.PA_TOKEN}@github.com/charleeo/okwelomo-backend.git /var/www/nestjsapp
-  #           cd /var/www/nestjsapp
-  #           git checkout -b dev origin
-  #           sudo npm install -g pm2
-  #           npm install
-  #           npm run build
-  #           npm run migration:run
-  #           pm2 start dist/src/main.js --name nestjsapp
-  #           echo '
-  #           <VirtualHost *:80>
-  #               ServerName: example.com
-  #               ProxyRequests Off
-  #               ProxyPreserveHost On
-  #               ProxyVia Full
-  #               <Proxy *>
-  #                   Require all granted
-  #               </Proxy>
-  #               ProxyPass / http://127.0.0.1:4551/
-  #               ProxyPassReverse / http://127.0.0.1:4551/
-  #           </VirtualHost>' | sudo tee /etc/apache2/sites-available/nestjsapp.conf
-  #           sudo a2ensite nestjsapp.conf
-  #           sudo systemctl restart apache2
+  deploy_nestjs:
+    docker:
+      - image: node:14
+    steps:
+      - run:
+          name: Deploy NestJS Application
+          command: |
+            apt-get update
+             apt-get install -y apache2 sudo
+            sudo a2enmod proxy proxy_http
+            sudo systemctl start apache2
+            sudo systemctl enable apache2
+            curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -
+            sudo apt-get install -y nodejs git
+            git clone https://charleeo:${var.PA_TOKEN}@github.com/charleeo/okwelomo-backend.git /var/www/nestjsapp
+            cd /var/www/nestjsapp
+            git checkout -b dev origin
+            sudo npm install -g pm2
+            npm install
+            npm run build
+            npm run migration:run
+            pm2 start dist/src/main.js --name nestjsapp
+            echo '
+            <VirtualHost *:80>
+                ServerName: example.com
+                ProxyRequests Off
+                ProxyPreserveHost On
+                ProxyVia Full
+                <Proxy *>
+                    Require all granted
+                </Proxy>
+                ProxyPass / http://127.0.0.1:4551/
+                ProxyPassReverse / http://127.0.0.1:4551/
+            </VirtualHost>' | sudo tee /etc/apache2/sites-available/nestjsapp.conf
+            sudo a2ensite nestjsapp.conf
+            sudo systemctl restart apache2
 
 workflows:
   version: 2
