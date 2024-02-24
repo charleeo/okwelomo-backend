@@ -122,7 +122,7 @@ resource "aws_route_table_association" "public_subnet_b_association" {
 
 # Create RDS subnet group
 resource "aws_db_subnet_group" "okw_db_subnet_group" {
-  name       = "okw_db_subnet_group"
+  name       = "okw_db_subnet_group_2"
   subnet_ids = [aws_subnet.public_subnet_a.id, aws_subnet.public_subnet_b.id]
 }
 
