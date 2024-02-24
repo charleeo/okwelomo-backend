@@ -8,7 +8,7 @@ jobs:
       - checkout
       - run:
           name: Initialize Terraform
-          command: terraform init -backend-config="token={TF_TOKEN_app_terraform_io}" & plan
+          command: terraform init -backend-config="token={TF_TOKEN_app_terraform_io}"
       # - run:
       #     name: Apply Terraform Changes to build
       #     command: terraform apply -auto-approve
