@@ -120,7 +120,7 @@ resource "aws_route_table_association" "public_subnet_b_association" {
 
 # Create RDS subnet group
 resource "aws_db_subnet_group" "okw_db_subnet_group" {
-  name       = "okw_db_subnet_group"
+  name       = "okw_db_subnet_group_2"
   subnet_ids = [aws_subnet.public_subnet_a.id, aws_subnet.public_subnet_b.id]
 }
 
@@ -157,7 +157,7 @@ resource "aws_instance" "okw_app_instance" {
   instance_type = "t2.micro"
   subnet_id     = aws_subnet.public_subnet_b.id
   security_groups = [aws_security_group.okw_sg.id]
-  key_name      = "okw-london"
+  key_name      = "okw-ireland"
   associate_public_ip_address = true
   tags = {
     Name = "okw_nest_instance"
