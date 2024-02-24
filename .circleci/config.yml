@@ -20,37 +20,38 @@ jobs:
     docker:
       - image: node:14
     steps:
-      - attach_workspace:
-          at: /app
       - run:
-          name: Install Apache2
+          name: Deploy NestJS Application
           command: |
-            sudo apt update
-            sudo apt install -y apache2
-      - run:
-          name: Install Dependencies
-          command: npm install
-      - run:
-          name: Build NestJS Application
-          command: npm run build
-      - run:
-          name: Configure Apache Reverse Proxy
-          command: |
-            echo "<VirtualHost *:80>" | sudo tee /etc/apache2/sites-available/nestjs.conf > /dev/null
-            echo "    ServerName example.com" | sudo tee -a /etc/apache2/sites-available/nestjs.conf > /dev/null
-            echo "    ServerAlias www.example.com" | sudo tee -a /etc/apache2/sites-available/nestjs.conf > /dev/null
-            echo "    ProxyPass / http://localhost:4551/" | sudo tee -a /etc/apache2/sites-available/nestjs.conf > /dev/null
-            echo "    ProxyPassReverse / http://localhost:4551/" | sudo tee -a /etc/apache2/sites-available/nestjs.conf > /dev/null
-            echo "</VirtualHost>" | sudo tee -a /etc/apache2/sites-available/nestjs.conf > /dev/null
-            sudo a2ensite nestjs.conf
-            sudo systemctl reload apache2
-      - run:
-          name: Run Database Migrations
-          command: npm run migration:run
-      - run:
-          name: Start NestJS Application with PM2
-          command: pm2 start dist/src/main.js --name "nestjsapp"
-          background: true
+            sudo apt-get update
+            sudo apt-get install -y apache2
+            sudo a2enmod proxy proxy_http
+            sudo systemctl start apache2
+            sudo systemctl enable apache2
+            curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -
+            sudo apt-get install -y nodejs git
+            git clone https://charleeo:${var.PA_TOKEN}@github.com/charleeo/okwelomo-backend.git /var/www/nestjsapp
+            cd /var/www/nestjsapp
+            git checkout -b dev origin
+            sudo npm install -g pm2
+            npm install
+            npm run build
+            npm run migration:run
+            pm2 start dist/src/main.js --name nestjsapp
+            echo '
+            <VirtualHost *:80>
+                ServerName: example.com
+                ProxyRequests Off
+                ProxyPreserveHost On
+                ProxyVia Full
+                <Proxy *>
+                    Require all granted
+                </Proxy>
+                ProxyPass / http://127.0.0.1:4551/
+                ProxyPassReverse / http://127.0.0.1:4551/
+            </VirtualHost>' | sudo tee /etc/apache2/sites-available/nestjsapp.conf
+            sudo a2ensite nestjsapp.conf
+            sudo systemctl restart apache2
 
 workflows:
   version: 2

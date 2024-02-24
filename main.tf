@@ -4,6 +4,7 @@ provider "aws" {
   # secret_key = var.AWS_SECRET_ACCESS_KEY
 }
 
+
 # Create VPC
 resource "aws_vpc" "okw" {
   cidr_block = "10.0.0.0/16"
@@ -14,7 +15,7 @@ resource "aws_vpc" "okw" {
     }
 }
 
-# Create internet gateway
+# # Create internet gateway
 resource "aws_internet_gateway" "okw_igw" {
   vpc_id = aws_vpc.okw.id
   tags = {
@@ -22,7 +23,7 @@ resource "aws_internet_gateway" "okw_igw" {
   }
 }
 
-# Create security group
+# # Create security group
 resource "aws_security_group" "okw_sg" {
   name        = "example_sg"
   description = "Allow inbound traffic to RDS"
@@ -69,7 +70,7 @@ resource "aws_security_group" "okw_sg" {
   }
 }
 
-# Create public subnet A
+# # Create public subnet A
 resource "aws_subnet" "public_subnet_a" {
   vpc_id            = aws_vpc.okw.id
   cidr_block        = "10.0.1.0/24"
@@ -79,7 +80,7 @@ resource "aws_subnet" "public_subnet_a" {
   }
 }
 
-# Create public subnet B
+# # Create public subnet B
 resource "aws_subnet" "public_subnet_b" {
   vpc_id            = aws_vpc.okw.id
   cidr_block        = "10.0.2.0/24"
@@ -89,7 +90,7 @@ resource "aws_subnet" "public_subnet_b" {
   }
 }
 
-# Create route table for public subnets
+# # Create route table for public subnets
 resource "aws_route_table" "public_route_table" {
   vpc_id = aws_vpc.okw.id
 
@@ -107,26 +108,26 @@ resource "aws_route_table" "public_route_table" {
   }
 }
 
-# Associate public subnet A with the route table
+# # Associate public subnet A with the route table
 resource "aws_route_table_association" "public_subnet_a_association" {
   subnet_id      = aws_subnet.public_subnet_a.id
   route_table_id = aws_route_table.public_route_table.id
   
 }
 
-# Associate public subnet B with the route table
+# # Associate public subnet B with the route table
 resource "aws_route_table_association" "public_subnet_b_association" {
   subnet_id      = aws_subnet.public_subnet_b.id
   route_table_id = aws_route_table.public_route_table.id
 }
 
-# Create RDS subnet group
+# # Create RDS subnet group
 resource "aws_db_subnet_group" "okw_db_subnet_group" {
   name       = "okw_db_subnet_group3"
   subnet_ids = [aws_subnet.public_subnet_a.id, aws_subnet.public_subnet_b.id]
 }
 
-# Create RDS instance
+# # Create RDS instance
 resource "aws_db_instance" "example_db_instance" {
   identifier            = "okw-db-instance"
   allocated_storage     = 20
