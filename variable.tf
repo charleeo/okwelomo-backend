@@ -5,5 +5,5 @@
 # variable "PA_TOKEN" {}
 
 variable "terraform_token" {
-  
+  default = "no-value"
 }
