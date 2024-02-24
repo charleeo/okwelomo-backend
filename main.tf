@@ -71,7 +71,7 @@ resource "aws_security_group" "okw_sg" {
 resource "aws_subnet" "public_subnet_a" {
   vpc_id            = aws_vpc.okw.id
   cidr_block        = "10.0.1.0/24"
-  availability_zone = "eu-west-2a" # Specify the availability zone
+  availability_zone = "eu-west-1a" # Specify the availability zone
   tags = {
     Name = "subnet_1"
   }
@@ -81,7 +81,7 @@ resource "aws_subnet" "public_subnet_a" {
 resource "aws_subnet" "public_subnet_b" {
   vpc_id            = aws_vpc.okw.id
   cidr_block        = "10.0.2.0/24"
-  availability_zone = "eu-west-2b" # Specify the availability zone
+  availability_zone = "eu-west-1b" # Specify the availability zone
   tags = {
     Name = "subnet_2"
   }
