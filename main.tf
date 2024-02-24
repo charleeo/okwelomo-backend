@@ -1,5 +1,5 @@
 provider "aws" {
-  region = "eu-west-2"
+  region = "eu-west-1"
 }
 
 # Create VPC
@@ -22,7 +22,7 @@ resource "aws_internet_gateway" "okw_igw" {
 
 # Create security group
 resource "aws_security_group" "okw_sg" {
-  name        = "okw_sg"
+  name        = "example_sg"
   description = "Allow inbound traffic to RDS"
   vpc_id      = aws_vpc.okw.id
 
@@ -67,7 +67,7 @@ resource "aws_security_group" "okw_sg" {
   }
 }
 
-# Create public subnet AB
+# Create public subnet A
 resource "aws_subnet" "public_subnet_a" {
   vpc_id            = aws_vpc.okw.id
   cidr_block        = "10.0.1.0/24"
@@ -120,7 +120,7 @@ resource "aws_route_table_association" "public_subnet_b_association" {
 
 # Create RDS subnet group
 resource "aws_db_subnet_group" "okw_db_subnet_group" {
-  name       = "okw_db_subnet_group_2"
+  name       = "okw_db_subnet_group"
   subnet_ids = [aws_subnet.public_subnet_a.id, aws_subnet.public_subnet_b.id]
 }
 
@@ -152,8 +152,7 @@ output "app_instance" {
 }
 
 resource "aws_instance" "okw_app_instance" {
-  ami           = "ami-0e5f882be1900e43b" 
-  # ami           = "ami-0905a3c97561e0b69" 
+  ami           = "ami-0905a3c97561e0b69" 
   instance_type = "t2.micro"
   subnet_id     = aws_subnet.public_subnet_b.id
   security_groups = [aws_security_group.okw_sg.id]
