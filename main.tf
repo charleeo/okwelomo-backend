@@ -1,5 +1,5 @@
 provider "aws" {
-  region = "eu-west-1"
+  region = "eu-west-2"
 }
 
 # Create VPC
@@ -22,7 +22,7 @@ resource "aws_internet_gateway" "okw_igw" {
 
 # Create security group
 resource "aws_security_group" "okw_sg" {
-  name        = "example_sg"
+  name        = "okw_sg"
   description = "Allow inbound traffic to RDS"
   vpc_id      = aws_vpc.okw.id
 
@@ -71,7 +71,7 @@ resource "aws_security_group" "okw_sg" {
 resource "aws_subnet" "public_subnet_a" {
   vpc_id            = aws_vpc.okw.id
   cidr_block        = "10.0.1.0/24"
-  availability_zone = "eu-west-1a" # Specify the availability zone
+  availability_zone = "eu-west-2a" # Specify the availability zone
   tags = {
     Name = "subnet_1"
   }
@@ -81,7 +81,7 @@ resource "aws_subnet" "public_subnet_a" {
 resource "aws_subnet" "public_subnet_b" {
   vpc_id            = aws_vpc.okw.id
   cidr_block        = "10.0.2.0/24"
-  availability_zone = "eu-west-1b" # Specify the availability zone
+  availability_zone = "eu-west-2b" # Specify the availability zone
   tags = {
     Name = "subnet_2"
   }
@@ -152,57 +152,58 @@ output "app_instance" {
 }
 
 resource "aws_instance" "okw_app_instance" {
-  ami           = "ami-0905a3c97561e0b69" 
+  ami           = "ami-0e5f882be1900e43b" 
+  # ami           = "ami-0905a3c97561e0b69" 
   instance_type = "t2.micro"
   subnet_id     = aws_subnet.public_subnet_b.id
   security_groups = [aws_security_group.okw_sg.id]
-  key_name      = "okw-ireland"
+  key_name      = "okw-london"
   associate_public_ip_address = true
   tags = {
     Name = "okw_nest_instance"
   }
 
-    user_data = <<-EOF
-              #!/bin/bash
-              sudo apt-get update
-              sudo apt-get install -y apache2
-              sudo a2enmod proxy proxy_http
-              sudo systemctl start apache2
-              sudo systemctl enable apache2
-              # Install Node.js
-              curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -
-              sudo apt-get install -y nodejs git
-              # Clone your repository
-              git clone https://charleeo:${var.PA_TOKEN}@github.com/charleeo/okwelomo-backend.git /var/www/nestjsapp
-              cd /var/www/nestjsapp
-              git checkout -b dev origin/dev
-              # Install PM2 to keep your app running
-              sudo npm install -g pm2
-              # Install dependencies and run migrations
-              npm install
-              npm run build
-              npm run migration:run
-              # Start your NestJS application
-              pm2 start dist/src/main.js --name nestjsapp
-              # Configure Apache to reverse proxy to your application
-              echo '
-              <VirtualHost *:80>
-                  ServerName: 
+    # user_data = <<-EOF
+    #           #!/bin/bash
+    #           sudo apt-get update
+    #           sudo apt-get install -y apache2
+    #           sudo a2enmod proxy proxy_http
+    #           sudo systemctl start apache2
+    #           sudo systemctl enable apache2
+    #           # Install Node.js
+    #           curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -
+    #           sudo apt-get install -y nodejs git
+    #           # Clone your repository
+    #           git clone https://charleeo:${var.PA_TOKEN}@github.com/charleeo/okwelomo-backend.git /var/www/nestjsapp
+    #           cd /var/www/nestjsapp
+    #           git checkout -b dev origin/dev
+    #           # Install PM2 to keep your app running
+    #           sudo npm install -g pm2
+    #           # Install dependencies and run migrations
+    #           npm install
+    #           npm run build
+    #           npm run migration:run
+    #           # Start your NestJS application
+    #           pm2 start dist/src/main.js --name nestjsapp
+    #           # Configure Apache to reverse proxy to your application
+    #           echo '
+    #           <VirtualHost *:80>
+    #               ServerName: 
 
-                  ProxyRequests Off
-                  ProxyPreserveHost On
-                  ProxyVia Full
+    #               ProxyRequests Off
+    #               ProxyPreserveHost On
+    #               ProxyVia Full
 
-                  <Proxy *>
-                      Require all granted
-                  </Proxy>
+    #               <Proxy *>
+    #                   Require all granted
+    #               </Proxy>
 
-                  ProxyPass / http://127.0.0.1:4551/
-                  ProxyPassReverse / http://127.0.0.1:4551/
-              </VirtualHost>' | sudo tee /etc/apache2/sites-available/nestjsapp.conf
-              sudo a2ensite nestjsapp.conf
-              sudo systemctl restart apache2
-              EOF
+    #               ProxyPass / http://127.0.0.1:4551/
+    #               ProxyPassReverse / http://127.0.0.1:4551/
+    #           </VirtualHost>' | sudo tee /etc/apache2/sites-available/nestjsapp.conf
+    #           sudo a2ensite nestjsapp.conf
+    #           sudo systemctl restart apache2
+    #           EOF
 }
 
 output "instance_public_ip" {
@@ -211,7 +212,7 @@ output "instance_public_ip" {
 
 
 # <VirtualHost *:80>
-#         ServerName ec2-18-201-113-203.eu-west-1.compute.amazonaws.com
+#         ServerName ec2-18-201-113-203.eu-west-2.compute.amazonaws.com
 #         ErrorLog /var/log/httpd/error.log
 #         CustomLog /var/log/httpd/access.log combined
 #         ProxyRequests On
