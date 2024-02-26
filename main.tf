@@ -187,10 +187,12 @@ resource "aws_instance" "okw_app_instance" {
               npm run migration:run
               # Start your NestJS application
               pm2 start dist/src/main.js --name nestjsapp
+              # Copy example.env to .env
+              cp /var/www/nestjsapp/example.env /var/www/nestjsapp/.env
               # Configure Apache to reverse proxy to your application
               echo '
               <VirtualHost *:80>
-                   ServerName ${aws_instance.okw_app_instance.public_ip}
+                   ServerName 
                    ErrorLog /var/log/apache2/error.log
                    CustomLog /var/log/apache2/access.log combined
                      ProxyRequests On
