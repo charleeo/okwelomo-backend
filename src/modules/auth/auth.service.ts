@@ -51,31 +51,32 @@ export class AuthService {
   }
 
   public async login(req, res) {
-    let status: boolean =false;
-    let message = '';
-    let code = 200;
-    let responseData = null;
+    let status: boolean =false
+    let message = ''
+    let code = 200
+    let responseData = null
     const remember = req.remember
-    const user = await this.userService.findOneByEmail(req.email);
+    const user = await this.userService.findOneByEmail(req.email)
     const { token, refreshToken } = await this.generateToken(
       instanceToPlain(user), remember
-    );
+    )
+
     if (token) {
       status = true;
-      message = 'Login successful';
-      code = 200;
+      message = 'Login successful'
+      code = 200
     }
 
-    delete user['password'];
-    delete user['created_at'];
-    delete user['updated_at'];
+    delete user['password']
+    delete user['created_at']
+    delete user['updated_at']
 
     responseData = user;
-    responseData.token = token;
-    responseData.refreshToken = refreshToken;
+    responseData.token = token
+    responseData.refreshToken = refreshToken
     return res
       .status(HttpStatus.OK)
-      .send(responseStructure(status, message, responseData, HttpStatus.OK));
+      .send(responseStructure(status, message, responseData, HttpStatus.OK))
   }
 
   public async refreshToken(user: Users, res) {

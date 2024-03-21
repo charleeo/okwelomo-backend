@@ -209,6 +209,63 @@ output "instance_public_ip" {
 }
 
 
+# Define the S3 bucket
+resource "aws_s3_bucket" "okw_s3" {
+  bucket = "okw-s3"
+  acl    = "private"
+
+  # Enable versioning for the bucket
+  versioning {
+    enabled = true
+  }
+}
+
+# Define the CloudFront distribution
+resource "aws_cloudfront_distribution" "okw_distribution" {
+  origin {
+    domain_name = aws_s3_bucket.okw_s3.bucket_regional_domain_name
+    origin_id   = aws_s3_bucket.okw_s3.bucket_regional_domain_name
+  }
+
+  enabled             = true
+  is_ipv6_enabled     = true
+  default_root_object = "index.html"
+
+  # Define the default cache behavior
+  default_cache_behavior {
+    allowed_methods  = ["GET", "HEAD", "OPTIONS"]
+    cached_methods   = ["GET", "HEAD", "OPTIONS"]
+    target_origin_id = aws_s3_bucket.okw_s3.bucket_regional_domain_name
+
+    forwarded_values {
+      query_string = false
+      cookies {
+        forward = "none"
+      }
+    }
+
+    viewer_protocol_policy = "redirect-to-https"
+    min_ttl                = 0
+    default_ttl            = 3600
+    max_ttl                = 86400
+  }
+
+  
+  # Define the restrictions for the distribution
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+
+  # Define the viewer certificate for the distribution
+  viewer_certificate {
+    cloudfront_default_certificate = true
+  }
+}
+
+
+
 # <VirtualHost *:80>
 #         ServerName  ec2-34-247-84-76.eu-west-1.compute.amazonaws.com
 #         ErrorLog /var/log/apache2/error.log

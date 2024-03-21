@@ -1,4 +1,6 @@
 import { Exclude } from 'class-transformer';
+import { Matches } from 'class-validator';
+import { NAME_REGEX } from 'src/config/constants';
 import { KYC } from 'src/modules/clients/kyc/entities/kyc.entity';
 import { UserRoles } from 'src/modules/config/entities/user.role.entity';
 import {
@@ -9,6 +11,7 @@ import {
   OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
+  
 } from 'typeorm';
 
 @Entity()
@@ -24,12 +27,21 @@ export class Users {
   email: string;
 
   @Column({ nullable: true, type: 'varchar' })
+  @Matches(NAME_REGEX, {
+    message: 'Name must not have special characters',
+  })
   firstname: string;
-
+  
   @Column({ nullable: true, type: 'varchar', unique: true })
+  @Matches(NAME_REGEX, {
+    message: 'Name must not have special characters',
+  })
   username: string;
 
   @Column({ nullable: true, type: 'varchar' })
+  @Matches(NAME_REGEX, {
+    message: 'Name must not have special characters',
+  })
   lastname: string;
 
   @Column({

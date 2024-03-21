@@ -30,6 +30,7 @@ import { ConfigMiddlewareHelperService } from './modules/config/services/helpers
 import { ServeStaticModule } from '@nestjs/serve-static/dist/serve-static.module';
 import { join } from 'path';
 
+
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),

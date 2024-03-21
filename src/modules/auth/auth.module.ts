@@ -16,6 +16,8 @@ import { AuthService } from './auth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
 import { RefreshJwtStrategy } from './strategies/refresh.token.strategy';
+import { GoogleStrategy } from './strategies/google.auth.strategy';
+import { SocialController } from './controller/social/social.controller';
 
 @Module({
   imports: [
@@ -27,8 +29,8 @@ import { RefreshJwtStrategy } from './strategies/refresh.token.strategy';
     }),
     ConfigModule, //for used in the auth service
   ],
-  providers: [AuthService, LocalStrategy, JwtStrategy, RefreshJwtStrategy],
-  controllers: [AuthController],
+  providers: [AuthService, LocalStrategy, JwtStrategy, RefreshJwtStrategy,GoogleStrategy],
+  controllers: [AuthController, SocialController],
 })
 export class AuthModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

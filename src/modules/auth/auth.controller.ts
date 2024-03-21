@@ -3,7 +3,9 @@ import { Response } from 'express';
 import {
   Body,
   Controller,
+  Get,
   Post,
+  Req,
   Request,
   Res,
   UseGuards,
@@ -35,4 +37,6 @@ export class AuthController {
   async signUp(@Body() user: CreateUserDto, @Res() res: Response) {
     return await this.authService.createUser(user, res);
   }
+
+
 }
