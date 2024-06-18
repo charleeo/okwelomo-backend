@@ -20,9 +20,9 @@ export const datasourceOption: DataSourceOptions = {
   logging: false,
   migrationsRun: false,
   subscribers: [],
-  ssl: {
-     rejectUnauthorized: false,
-  },
+  // ssl: {
+  //    rejectUnauthorized: false,
+  // },
 
   // ssl: {
   //   rejectUnauthorized: true, // You can set this to false if you want to bypass certificate validation

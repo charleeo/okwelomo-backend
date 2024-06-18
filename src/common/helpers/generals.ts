@@ -110,11 +110,30 @@ function addWeeks(date: Date, weeks = 1) {
   return date;
 }
 
+export function addHours( hours = 1) {
+  let currentDate = new Date();
+  let newDate = new Date(currentDate.getTime() + hours * 60 * 60 * 1000);
+  return newDate.toISOString();
+}
+
+export function isCurrentTimeGreaterThan(givenTimestamp) {
+  let currentDate = new Date();
+  let givenDate = new Date(givenTimestamp);
+  return givenDate < currentDate;
+}
+
+
 export function generateReference(code?: string): string {
   const date = new Date();
   const time = date.setTime(date.getTime()).toString();
 
   return `${code ?? 'APP_CODE_'}${time}`;
+}
+export function generatePasswordResetCode(): string {
+  const date = new Date();
+  let code = date.setTime(date.getTime()).toString();
+  // code = code.substring()
+  return code
 }
 
 export function Classes(bases) {

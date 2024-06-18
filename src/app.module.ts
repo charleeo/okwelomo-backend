@@ -21,7 +21,6 @@ import { MailsModule } from './modules/mails/mails.module';
 
 import { EventModule } from './modules/event/event.module';
 import { AdminModule } from './modules/admin/admin.module';
-import { AccountModule } from './modules/account/account.module';
 import { ClientsModule } from './modules/clients/clients.module';
 import { excludedRoutes } from './routes/exclude.';
 import { LoanConfigMustBeSetMiddleware } from './middleware/loan/loan-config-must-be-set/loan-config-must-be-set.middleware';
@@ -29,6 +28,7 @@ import { LoanSettingService } from './modules/clients/loans/services/loan.settin
 import { ConfigMiddlewareHelperService } from './modules/config/services/helpers.middleware.config';
 import { ServeStaticModule } from '@nestjs/serve-static/dist/serve-static.module';
 import { join } from 'path';
+import { AccountRecoveryModule } from './modules/account-recovery/account-recovery.module';
 
 
 @Module({
@@ -49,11 +49,11 @@ import { join } from 'path';
     MailsModule,
     EventModule,
     AdminModule,
-    AccountModule,
     ClientsModule,
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', '../public'),
     }),
+    AccountRecoveryModule,
   ],
   controllers: [],
   providers: [MailsModule, LoanSettingService, ConfigMiddlewareHelperService],

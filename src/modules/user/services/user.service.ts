@@ -33,7 +33,7 @@ export class UserService extends BaseDataSource {
   async createOrUpdate(user: any): Promise<any> {
     const userData =  await this.findOneByEmail(user.email)
     if(!userData){
-      console.log("Kdlksldkslklsfk")
+
       user.password = 'no-password'
       return await this.usersRepository.upsert(user,['email'])
     }
@@ -83,7 +83,7 @@ export class UserService extends BaseDataSource {
     await this.usersRepository.delete(id)
   }
 
-  async update(id: number, updateUserDto: UpdateUserDto) {
+  async update(id: number, updateUserDto: Partial< UpdateUserDto>) {
     return await this.usersRepository.update(id, updateUserDto)
   }
 

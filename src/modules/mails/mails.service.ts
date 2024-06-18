@@ -8,20 +8,18 @@ export class MailsService {
   constructor(private mailerService: MailerService) {}
 
   async sendUserConfirmation(mailObject: any) {
-    
     try{
-        await this.mailerService.sendMail({
+     return  await this.mailerService.sendMail({
           to: mailObject.receipient.email,
           from: `"${process.env.APP_NAME}" ${process.env.MAIL_FROM_ADDRESS}`, // override default from
-          subject: mailObject.extraData.subject,
-          template:mailObject.template.name,
+          subject: mailObject?.extraData?.subject,
+          template:mailObject?.template?.name,
           replyTo:`"No Reply" ${process.env.MAIL_REPLY_TO}`,
           context: { 
-            name: mailObject.receipient.name,
-            url:mailObject.extraData.url,
+            name: mailObject?.receipient?.name,
+            url:`${process.env.FRONTEND_URL}/` + mailObject?.extraData?.url,
           },
         });
-
     }catch(e){
         logErrors(e)
     }

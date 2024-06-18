@@ -8,4 +8,7 @@ export const excludedRoutes: string[] = [
   'social/login',
   'config/get/loan/dependencies',
   'config/set/loan/approval/types',
+  'account-recovery/send_forgot/password/email',
+  'account-recovery/reset/password',
+  'account-recovery/reset/password/redirection',
 ];

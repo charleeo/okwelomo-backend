@@ -38,5 +38,10 @@ export class AuthController {
     return await this.authService.createUser(user, res);
   }
 
+  @Post('send_forgot/password/email')
+  async sendForgotPasswordEmail(@Body() receipient: any, @Res() res: Response) {
+      console.log("Here")
+      // return await this.accountRecoveryService.sendForgotPasswordEmail(receipient, res);
+    }
 
 }

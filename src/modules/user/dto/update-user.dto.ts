@@ -37,4 +37,13 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
   @IsString()
   @Length(2, 225)
   public address: string;
+
+  @IsOptional()
+  @Matches(
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?#&^<>])[A-Za-z\d@$!%*?#&^<>]{7,}$/,
+    {
+      message: `$property must have a lower case, an upper case, a number, a special character and a minimum of 10 characters`,
+    },
+  )
+  public password: string;
 }
