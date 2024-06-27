@@ -15,9 +15,8 @@ import { AuthModule } from './modules/auth/auth.module';
 
 import { AuthMiddleware } from './middleware/auth/auth.middleware';
 import { ScheduleModule } from '@nestjs/schedule';
-import { BullModule } from '@nestjs/bull';
 import { EventEmitterModule } from '@nestjs/event-emitter';
-import { MailsModule } from './modules/mails/mails.module';
+import { MailModule } from './modules/mails/mails.module';
 
 import { EventModule } from './modules/event/event.module';
 import { AdminModule } from './modules/admin/admin.module';
@@ -36,17 +35,12 @@ import { AccountRecoveryModule } from './modules/account-recovery/account-recove
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRoot(datasourceOption),
     ScheduleModule.forRoot(),
-    BullModule.forRoot({
-      redis: {
-        host: 'localhost',
-        port: 6379,
-      },
-    }),
+    
     EventEmitterModule.forRoot(),
     UserModule,
     AuthModule,
     CommonConfig,
-    MailsModule,
+    MailModule,
     EventModule,
     AdminModule,
     ClientsModule,
@@ -56,7 +50,7 @@ import { AccountRecoveryModule } from './modules/account-recovery/account-recove
     AccountRecoveryModule,
   ],
   controllers: [],
-  providers: [MailsModule, LoanSettingService, ConfigMiddlewareHelperService],
+  providers: [MailModule, LoanSettingService, ConfigMiddlewareHelperService],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {

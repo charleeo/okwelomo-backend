@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
-import { MailsService } from 'src/modules/mails/mails.service';
+import { MailService } from 'src/modules/mails/mails.service';
 
 @Injectable()
 export class UserCreatedEvent {
-  constructor(private eventEmitter: EventEmitter2,private emailService:MailsService) {}
+  constructor(private eventEmitter: EventEmitter2,private emailService:MailService) {}
 
   emitEvent() {
     this.eventEmitter.emit('user.created')
@@ -12,6 +12,6 @@ export class UserCreatedEvent {
 
   @OnEvent('user.created')
   listentToEvent(mailObject) {
-    this.emailService.sendUserConfirmation(mailObject)
+    // this.emailService.sendTemplateMail(mailObject)
   }
 }

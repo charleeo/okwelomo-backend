@@ -6,7 +6,7 @@ import {
   Injectable,
 } from '@nestjs/common';
 
-import { MailsService } from '../../mails/mails.service';
+import { MailService } from '../../mails/mails.service';
 import { UserService } from 'src/modules/user/services/user.service';
 import { instanceToPlain } from 'class-transformer';
 import { ForgotPasswordRepository } from '../repository/forgot.password.repository';
@@ -18,7 +18,7 @@ import { UserRepository } from 'src/modules/user/user.repository';
 @Injectable()
 export class AccountRecoveryService {
   constructor(
-    private readonly mailService: MailsService,
+    private readonly mailService: MailService,
     private readonly userService: UserService,
     private readonly forgotPasswordRepo: ForgotPasswordRepository,
     private readonly userRepo: UserRepository,
@@ -38,23 +38,18 @@ export class AccountRecoveryService {
       .send(responseStructure(status, message, null, code))
     }
     const { token} = await this.createToken(userObject)
-    const mailObject ={
-      extraData: {
-        url:`reset/password?token=${token}`,
-        subject: "Reset password"
-      },
-      receipient:{
-        name:userObject?.name ?? userObject.email,
-        email: userObject?.email,
-      },
-      template:{
-        name: 'forgot-password.hbs'
-      }
+   
+    const context ={
+      resetLink:`${process.env.FRONTEND_URL}/reset/password?token=${token}`,
+       name:userObject?.name ?? userObject.email,
     }
+
+    let mailResponse = await this.mailService.sendTemplateMail(userObject?.email, "Reset Password", 'forgot-password', context, 'dollars.png')
     
-    let mailResponse = await this.mailService.sendUserConfirmation(mailObject)
-    message = 'Mail sent'
-    status = true
+    if(mailResponse?.accepted?.length && !mailResponse?.rejected?.length){
+      message = 'Mail sent'
+      status = true
+    }
     return res
       .status(code)
       .send(responseStructure(status, message, mailResponse, code))
@@ -65,7 +60,8 @@ export class AccountRecoveryService {
     await this.forgotPasswordRepo.upsert({
       email: req.email,
       token: generatePasswordResetCode(),
-      token_expiration: addHours(expiration)
+      token_expiration: addHours(expiration),
+      is_expired:false
     }, ['email'])
     const details = await this.forgotPasswordRepo.findOneBy({email: req.email})
     return details
